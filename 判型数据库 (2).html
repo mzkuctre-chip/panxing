@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>判型数据库</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a1a1a'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-size='36' font-family='PingFang SC,sans-serif' fill='white'%3E型%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a1a1a'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-size='36' font-family='PingFang SC,sans-serif' fill='white'%3E型%3C/text%3E%3C/svg%3E">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+/* ===== 填入你的配置 ===== */
+/* 在下方 JS 里修改 SUPABASE_URL 和 SUPABASE_KEY */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #ffffff;
+  --bg2: #f7f7f5;
+  --bg3: #f0efea;
+  --border: rgba(0,0,0,0.1);
+  --border2: rgba(0,0,0,0.18);
+  --text: #1a1a1a;
+  --text2: #666;
+  --text3: #999;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --info-bg: #e6f1fb;
+  --info-text: #0c447c;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1a1a; --bg2: #222; --bg3: #2a2a2a;
+    --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+    --text: #f0f0f0; --text2: #aaa; --text3: #666;
+    --info-bg: #0c2a42; --info-text: #7bbcf5;
+  }
+}
+body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+#app { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1rem; }
+h1 { font-size: 18px; font-weight: 500; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 10px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; }
+.dot.offline { background: #ef4444; }
+.dot.loading { background: #f59e0b; animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* toolbar */
+.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
+.toolbar input[type=text] { flex: 1; min-width: 180px; padding: 7px 12px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 13px; outline: none; }
+.toolbar input:focus { border-color: var(--info-text); box-shadow: 0 0 0 2px var(--info-bg); }
+button { padding: 7px 14px; font-size: 13px; border-radius: var(--radius); cursor: pointer; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); transition: all .15s; }
+button:hover { background: var(--bg2); }
+.btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+.btn-primary:hover { opacity: .8; }
+.btn-danger { color: #ef4444; border-color: #ef4444; }
+.btn-danger:hover { background: #fef2f2; }
+
+/* filters */
+.filters { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 5px 0; }
+.filter-row:not(:last-child) { border-bottom: 0.5px solid var(--border); padding-bottom: 8px; margin-bottom: 3px; }
+.filter-label { font-size: 11px; color: var(--text3); min-width: 52px; flex-shrink: 0; }
+.chip { font-size: 11px; padding: 3px 9px; border-radius: 10px; cursor: pointer; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text2); white-space: nowrap; transition: all .1s; user-select: none; }
+.chip:hover { background: var(--bg2); }
+.chip.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.chip.on.multi { background: #eeedfe; color: #3c3489; border-color: #afa9ec; }
+.filter-actions { margin-left: auto; }
+
+/* stats */
+.stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+.stat { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 6px 14px; font-size: 12px; color: var(--text2); }
+.stat strong { font-size: 16px; font-weight: 500; color: var(--text); display: block; }
+
+/* status bar */
+.statusbar { font-size: 12px; color: var(--text3); margin-bottom: 6px; min-height: 18px; }
+
+/* table */
+.tbl-wrap { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
+th { background: var(--bg2); padding: 8px 10px; text-align: left; font-weight: 500; border-bottom: 0.5px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 2; font-size: 12px; color: var(--text2); }
+th:hover { background: var(--bg3); }
+.sort-arrow { font-size: 10px; margin-left: 2px; color: var(--text3); }
+td { padding: 6px 10px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--bg2); }
+td[contenteditable=true] { cursor: text; }
+td[contenteditable=true]:focus { outline: 2px solid var(--info-text); outline-offset: -2px; background: var(--info-bg); white-space: normal; overflow: visible; max-width: none; }
+td.saving { opacity: .6; }
+
+/* badges */
+.badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+.b-star  { background: #eeedfe; color: #3c3489; }
+.b-pub   { background: #e1f5ee; color: #085041; }
+.b-net   { background: #faeeda; color: #633806; }
+.b-role  { background: #faece7; color: #712b13; }
+.b-wri   { background: #fbeaf0; color: #72243e; }
+.b-other { background: var(--bg2); color: var(--text2); }
+.mb { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 500; }
+.mb-y { background: #faeeda; color: #633806; }
+.mb-g { background: #eaf3de; color: #27500a; }
+.mb-p { background: #eeedfe; color: #3c3489; }
+.mb-b { background: #e6f1fb; color: #0c447c; }
+.del-btn { background: none; border: none; color: var(--text3); cursor: pointer; padding: 2px 6px; font-size: 15px; border-radius: 4px; }
+.del-btn:hover { color: #ef4444; background: #fef2f2; }
+
+/* modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; }
+.modal-overlay.open { display: flex; align-items: center; justify-content: center; }
+.modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 1.5rem; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
+.modal h2 { font-size: 15px; font-weight: 500; margin-bottom: 1rem; }
+.form-row { margin-bottom: 10px; }
+.form-row label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 4px; }
+.form-row input, .form-row select { width: 100%; padding: 7px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 13px; outline: none; }
+.form-row input:focus { border-color: var(--info-text); box-shadow: 0 0 0 2px var(--info-bg); }
+.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1rem; }
+
+/* import banner */
+.import-banner { background: var(--info-bg); border: 0.5px solid var(--info-text); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 10px; font-size: 13px; color: var(--info-text); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>
+    <span class="dot loading" id="conn-dot"></span>
+    判型数据库
+    <span id="conn-label" style="font-size:12px;color:var(--text3);font-weight:400">连接中...</span>
+  </h1>
+
+  <div id="import-banner" class="import-banner" style="display:none">
+    数据库为空，是否导入初始数据（121条）？
+    <button class="btn-primary" onclick="importInitial()" style="white-space:nowrap">一键导入</button>
+  </div>
+
+  <div class="toolbar">
+    <input type="text" id="search" placeholder="搜索姓名、Tritype、来自...">
+    <button class="btn-primary" onclick="openAdd()">+ 添加</button>
+    <button onclick="loadData()">刷新</button>
+  </div>
+
+  <div class="filters" id="filters">
+    <div class="filter-row">
+      <span class="filter-label">身份</span>
+      <div id="f-shenfen"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">MBTI</span>
+      <div id="f-mbti"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">SOC型</span>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+        <span style="font-size:10px;color:var(--text3);padding:2px 4px">α</span>
+        <div id="f-soc-a" style="display:contents"></div>
+        <span style="font-size:10px;color:var(--text3);padding:2px 6px 2px 10px">β</span>
+        <div id="f-soc-b" style="display:contents"></div>
+        <span style="font-size:10px;color:var(--text3);padding:2px 6px 2px 10px">γ</span>
+        <div id="f-soc-g" style="display:contents"></div>
+        <span style="font-size:10px;color:var(--text3);padding:2px 6px 2px 10px">δ</span>
+        <div id="f-soc-d" style="display:contents"></div>
+      </div>
+
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">九型</span>
+      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+        <span style="font-size:10px;color:var(--text3);padding:2px 4px">腹区</span>
+        <div id="f-e9-gut" style="display:contents"></div>
+        <span style="font-size:10px;color:var(--text3);padding:2px 6px 2px 10px">心区</span>
+        <div id="f-e9-heart" style="display:contents"></div>
+        <span style="font-size:10px;color:var(--text3);padding:2px 6px 2px 10px">脑区</span>
+        <div id="f-e9-head" style="display:contents"></div>
+      </div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">本能副型</span>
+      <div id="f-inst"></div>
+      <span class="filter-label" style="margin-left:16px">五行</span>
+      <div id="f-wx"></div>
+      <span class="filter-label" style="margin-left:16px">星座</span>
+      <div id="f-star"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">态度类型</span>
+      <div id="f-attitude"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">爱之心理</span>
+      <div id="f-love"></div>
+      <div class="filter-actions">
+        <button onclick="clearFilters()" style="font-size:11px;padding:3px 10px">清除筛选</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+  <div class="statusbar" id="statusbar">加载中...</div>
+
+  <div class="tbl-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:82px"  onclick="sortBy('name')">姓名 <span class="sort-arrow" id="sa-name"></span></th>
+          <th style="width:68px"  onclick="sortBy('mbti')">MBTI <span class="sort-arrow" id="sa-mbti"></span></th>
+          <th style="width:100px">Socionics</th>
+          <th style="width:58px"  onclick="sortBy('e9')">九型 <span class="sort-arrow" id="sa-e9"></span></th>
+          <th style="width:140px" onclick="sortBy('tritype')">Tritype <span class="sort-arrow" id="sa-tritype"></span></th>
+          <th style="width:110px">本能副型</th>
+          <th style="width:80px">态度类型</th>
+          <th style="width:120px">爱之心理</th>
+          <th style="width:72px">五行</th>
+          <th style="width:130px">星座</th>
+          <th style="width:62px"  onclick="sortBy('identity')">身份 <span class="sort-arrow" id="sa-identity"></span></th>
+          <th style="width:32px"></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2 id="modal-title">添加条目</h2>
+    <div class="form-row"><label>姓名 *</label><input id="f-name" type="text" placeholder="姓名"></div>
+    <div class="form-row"><label>MBTI</label>
+      <select id="f-mbti-sel">
+        <option value="">—</option>
+        <option>ENFP</option><option>INFP</option><option>ENFJ</option><option>INFJ</option>
+        <option>ENTP</option><option>INTP</option><option>ENTJ</option><option>INTJ</option>
+        <option>ESFP</option><option>ISFP</option><option>ESTP</option><option>ISTP</option>
+        <option>ESFJ</option><option>ISFJ</option><option>ESTJ</option><option>ISTJ</option>
+      </select>
+    </div>
+    <div class="form-row"><label>Socionics</label><input id="f-soc" type="text" placeholder="如 ILE"></div>
+    <div class="form-row"><label>九型主型侧翼</label><input id="f-e9" type="text" placeholder="如 7w6"></div>
+    <div class="form-row"><label>Tritype</label><input id="f-tritype" type="text" placeholder="如 748发动者"></div>
+    <div class="form-row"><label>本能副型</label><input id="f-instinct" type="text" placeholder="如 so8, sx4, sx7"></div>
+    <div class="form-row"><label>态度类型</label><input id="f-attitude" type="text" placeholder="如 E, F, L, V"></div>
+    <div class="form-row"><label>爱之心理</label><input id="f-love" type="text" placeholder="爱之心理类型"></div>
+    <div class="form-row"><label>身份</label>
+      <select id="f-identity">
+        <option value="">—</option>
+        <option>明星</option><option>素人</option><option>网红</option><option>角色</option><option>作者</option>
+      </select>
+    </div>
+    <div class="form-row"><label>五行日主</label><input id="f-wuxing" type="text" placeholder="如 壬, 水"></div>
+    <div class="form-row"><label>星座</label><input id="f-xingzuo" type="text" placeholder="如 ⬆️处女, 水瓶, 🌕双鱼"></div>
+    <div class="form-actions">
+      <button onclick="closeModal()">取消</button>
+      <button class="btn-primary" onclick="submitForm()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  ★★★ 在这里填入你的 Supabase 配置 ★★★
+// ============================================================
+const SUPABASE_URL = 'https://snkamlofzhnlbcfnatcc.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_NM2_44Uz8Txp31YNzWKMpA_cHD53YRD'
+// ============================================================
+
+const { createClient } = supabase
+const db = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+const MBTI_Y = new Set(['ESFP','ISFP','ISTP','ESTP'])
+const MBTI_G = new Set(['ENFP','INFP','INFJ','ENFJ'])
+const MBTI_P = new Set(['INTJ','ENTJ','INTP','ENTP'])
+const MBTI_B = new Set(['ESFJ','ISFJ','ISTJ','ESTJ'])
+function mbtiCls(m){ return MBTI_Y.has(m)?'mb-y':MBTI_G.has(m)?'mb-g':MBTI_P.has(m)?'mb-p':'mb-b' }
+function idCls(id){ return {明星:'b-star',素人:'b-pub',网红:'b-net',角色:'b-role',作者:'b-wri'}[id]||'b-other' }
+function splitTrim(s){ return (s||'').split(',').map(v=>v.trim()).filter(Boolean) }
+function normStar(s){ return s.replace(/⬆️|🌕/g,'').trim() }
+function getXx(soc){ const m=(soc||'').match(/[αβγδ]/); return m?m[0]:'' }
+function getInst(s){ return splitTrim(s).map(v=>v.slice(0,2)).filter(v=>['so','sp','sx'].includes(v)) }
+
+let allData = []
+let sortCol = 'name', sortDir = 1
+const filt = { shenfen:null, mbti:[], soctype:[], e9:[], inst:[], wx:[], star:[], attitude:[], love:[] }
+let editId = null
+let saveTimer = {}
+
+// ── connection check ──
+async function checkConn(){
+  const dot = document.getElementById('conn-dot')
+  const lbl = document.getElementById('conn-label')
+  try {
+    const { error } = await db.from('panjing').select('id').limit(1)
+    if(error) throw error
+    dot.className='dot'; lbl.textContent='已连接'
+  } catch(e) {
+    dot.className='dot offline'; lbl.textContent='连接失败 — 请检查配置'
+  }
+}
+
+// ── load ──
+async function loadData(){
+  setStatus('加载中...')
+  const { data, error } = await db.from('panjing').select('*').order('id')
+  if(error){ setStatus('加载失败: '+error.message); return }
+  allData = data
+  if(allData.length === 0){
+    document.getElementById('import-banner').style.display='flex'
+  } else {
+    document.getElementById('import-banner').style.display='none'
+  }
+  buildFilters()
+  render()
+  setStatus('已加载 '+allData.length+' 条 · '+new Date().toLocaleTimeString('zh-CN'))
+}
+
+// ── render ──
+function getFiltered(){
+  const q = document.getElementById('search').value.toLowerCase()
+  return allData.filter(r=>{
+    if(filt.shenfen && r.identity !== filt.shenfen) return false
+    if(filt.mbti.length && !filt.mbti.includes(r.mbti)) return false
+    if(filt.soctype.length && !filt.soctype.some(s=>(r.soc||'').includes(s))) return false
+    if(filt.e9.length && !filt.e9.includes(r.e9)) return false
+    if(filt.inst.length){
+      const ri = getInst(r.instinct)
+      const ALL = ['so','sp','sx']
+      const excluded = ALL.filter(f=>!filt.inst.includes(f))
+      if(!filt.inst.every(f=>ri.includes(f))) return false
+      if(excluded.some(f=>ri.includes(f))) return false
+    }
+    if(filt.wx.length   && !filt.wx.some(f=>(r.wuxing||'').includes(f))) return false
+    if(filt.star.length && !filt.star.some(f=>splitTrim(r.xingzuo).map(normStar).includes(f))) return false
+    if(filt.attitude.length && !filt.attitude.includes(r.attitude)) return false
+    if(filt.love.length     && !filt.love.includes(r.love_psych)) return false
+    if(q){
+      const hay = [r.name,r.mbti,r.soc,r.e9,r.tritype,r.instinct,r.attitude,r.love_psych,r.identity,r.laizi].join(' ').toLowerCase()
+      if(!hay.includes(q)) return false
+    }
+    return true
+  }).sort((a,b)=>(a[sortCol]||'').localeCompare(b[sortCol]||'','zh')*sortDir)
+}
+
+function render(){
+  const rows = getFiltered()
+  const tbody = document.getElementById('tbody')
+  tbody.innerHTML = ''
+  rows.forEach(r=>{
+    const tr = document.createElement('tr')
+    const mc = mbtiCls(r.mbti)
+    tr.innerHTML = `
+      <td contenteditable="true" data-id="${r.id}" data-col="name"     title="${r.name||''}">${r.name||''}</td>
+      <td class="td-mbti" data-id="${r.id}"><span class="mb ${mc}">${r.mbti||''}</span></td>
+      <td contenteditable="true" data-id="${r.id}" data-col="soc"      title="${r.soc||''}">${r.soc||''}</td>
+      <td contenteditable="true" data-id="${r.id}" data-col="e9">${r.e9||''}</td>
+      <td contenteditable="true" data-id="${r.id}" data-col="tritype"  title="${r.tritype||''}">${r.tritype||''}</td>
+      <td contenteditable="true" data-id="${r.id}" data-col="instinct" title="${r.instinct||''}">${r.instinct||''}</td>
+      <td contenteditable="true" data-id="${r.id}" data-col="attitude">${r.attitude||''}</td>
+      <td contenteditable="true" data-id="${r.id}" data-col="love_psych" title="${r.love_psych||''}">${r.love_psych||''}</td>
+      <td contenteditable="true" data-id="${r.id}" data-col="wuxing" title="${r.wuxing||''}">${r.wuxing||''}</td>
+      <td contenteditable="true" data-id="${r.id}" data-col="xingzuo" title="${r.xingzuo||''}">${r.xingzuo||''}</td>
+      <td class="td-identity" data-id="${r.id}"><span class="badge ${idCls(r.identity)}">${r.identity||''}</span></td>
+      <td><button class="del-btn" onclick="delRow(${r.id})">×</button></td>
+    `
+    tbody.appendChild(tr)
+  })
+
+  // inline edit — save on blur with 600ms debounce
+  tbody.querySelectorAll('td[contenteditable]').forEach(td=>{
+    td.addEventListener('blur', ()=>{
+      const id  = +td.dataset.id
+      const col = td.dataset.col
+      const val = td.textContent.trim()
+      // update local cache
+      const rec = allData.find(r=>r.id===id)
+      if(rec) rec[col] = val
+      // debounce save
+      clearTimeout(saveTimer[id+col])
+      saveTimer[id+col] = setTimeout(()=>saveCell(id,col,val,td), 600)
+    })
+  })
+
+
+  // MBTI inline select
+  const MBTI_LIST = ['','ENFP','INFP','ENFJ','INFJ','ENTP','INTP','ENTJ','INTJ','ESFP','ISFP','ESTP','ISTP','ESFJ','ISFJ','ESTJ','ISTJ']
+  const ID_LIST   = ['','明星','素人','网红','角色','作者']
+  function makeSelect(td, list, col){
+    const id = +td.dataset.id
+    const rec = allData.find(r=>r.id===id)
+    const cur = rec ? (rec[col]||'') : ''
+    const sel = document.createElement('select')
+    sel.style.cssText = 'font-size:12px;padding:2px 4px;border-radius:4px;border:1px solid #aaa;background:var(--bg);color:var(--text);width:100%;cursor:pointer'
+    list.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v||'—'; if(v===cur)o.selected=true; sel.appendChild(o) })
+    td.innerHTML = ''
+    td.appendChild(sel)
+    sel.size = Math.min(list.length, 8)
+    sel.style.position = 'absolute'
+    sel.style.zIndex = '999'
+    sel.style.minWidth = '120px'
+    sel.style.boxShadow = '0 4px 12px rgba(0,0,0,.15)'
+    sel.style.borderRadius = '6px'
+    sel.style.overflow = 'auto'
+    sel.style.background = 'var(--bg)'
+    function closeSelect(){ sel.size=1; sel.style.position=''; sel.style.zIndex=''; sel.style.boxShadow=''; document.removeEventListener('mousedown', outside) }
+    function outside(e){ if(!sel.contains(e.target)){ closeSelect(); render() } }
+    sel.onchange = async ()=>{
+      const val = sel.value
+      if(rec) rec[col] = val
+      closeSelect()
+      await saveCell(id, col, val, null)
+      render()
+    }
+    setTimeout(()=>document.addEventListener('mousedown', outside), 50)
+  }
+  tbody.querySelectorAll('.td-mbti').forEach(td=>{
+    td.style.cursor='pointer'
+    td.onclick = ()=>makeSelect(td, MBTI_LIST, 'mbti')
+  })
+  tbody.querySelectorAll('.td-identity').forEach(td=>{
+    td.style.cursor='pointer'
+    td.onclick = ()=>makeSelect(td, ID_LIST, 'identity')
+  })
+
+  const byId = {}
+  allData.forEach(r=>{ byId[r.identity]=(byId[r.identity]||0)+1 })
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><strong>${allData.length}</strong>总计</div>
+    <div class="stat"><strong>${rows.length}</strong>筛选</div>
+    <div class="stat"><strong>${byId['明星']||0}</strong>明星</div>
+    <div class="stat"><strong>${byId['素人']||0}</strong>素人</div>
+    <div class="stat"><strong>${byId['网红']||0}</strong>网红</div>
+  `
+
+  ;['name','mbti','e9','tritype','identity'].forEach(c=>{
+    const el = document.getElementById('sa-'+c)
+    if(el) el.textContent = sortCol===c ? (sortDir===1?'↑':'↓') : ''
+  })
+}
+
+async function saveCell(id, col, val, td){
+  td && td.classList.add('saving')
+  const { error } = await db.from('panjing').update({[col]:val}).eq('id',id)
+  td && td.classList.remove('saving')
+  if(error){ setStatus('保存失败: '+error.message) }
+  else { setStatus('已保存 · '+new Date().toLocaleTimeString('zh-CN')) }
+}
+
+// ── sort & filter ──
+function sortBy(col){ sortCol===col ? sortDir*=-1 : (sortCol=col, sortDir=1); render() }
+
+function buildFilters(){
+  const mbtiVals = [...new Set(allData.map(r=>r.mbti).filter(Boolean))].sort()
+  const e9Vals   = [...new Set(allData.map(r=>r.e9).filter(Boolean))].sort()
+  bc('f-shenfen', ['明星','素人','网红','角色','作者'], 'shenfen', false)
+  bc('f-mbti',    mbtiVals, 'mbti', true)
+  const SOC_GROUPS = {
+    'f-soc-a': ['ILE','SEI','ESE','LII'],
+    'f-soc-b': ['SLE','IEI','EIE','LSI'],
+    'f-soc-g': ['SEE','ILI','LIE','ESI'],
+    'f-soc-d': ['IEE','SLI','LSE','EII'],
+  }
+  Object.entries(SOC_GROUPS).forEach(([cid, vals])=>{
+    bc(cid, vals, 'soctype', true)
+  })
+  const E9_GUT   = ['1w2','1w9','8w7','8w9','9w1','9w8']
+  const E9_HEART = ['2w1','2w3','3w2','3w4','4w3','4w5']
+  const E9_HEAD  = ['5w4','5w6','6w5','6w7','7w6','7w8']
+  bc('f-e9-gut',   E9_GUT,   'e9', true)
+  bc('f-e9-heart', E9_HEART, 'e9', true)
+  bc('f-e9-head',  E9_HEAD,  'e9', true)
+  bc('f-inst',    ['so','sp','sx'], 'inst', true)
+  bc('f-wx',      ['木','火','土','金','水'], 'wx', true)
+  bc('f-star',    ['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'], 'star', true)
+  const attVals = [...new Set(allData.map(r=>r.attitude).filter(Boolean))].sort()
+  const loveVals = [...new Set(allData.map(r=>r.love_psych).filter(Boolean))].sort()
+  bc('f-attitude', attVals, 'attitude', true)
+  bc('f-love',     loveVals, 'love', true)
+}
+
+function bc(containerId, vals, key, multi){
+  const c = document.getElementById(containerId)
+  if(!c) return
+  c.innerHTML = ''
+  vals.forEach(v=>{
+    const d = document.createElement('span')
+    d.className = 'chip' + (multi?' multi':'')
+    d.textContent = v
+    d.onclick = ()=>{
+      if(multi){
+        const arr=filt[key], idx=arr.indexOf(v)
+        idx>=0 ? (arr.splice(idx,1), d.classList.remove('on')) : (arr.push(v), d.classList.add('on','multi'))
+      } else {
+        const was = filt[key]===v
+        document.querySelectorAll('#'+containerId+' .chip').forEach(c=>c.classList.remove('on'))
+        filt[key] = was ? null : v
+        if(!was) d.classList.add('on')
+      }
+      render()
+    }
+    c.appendChild(d)
+  })
+}
+
+function clearFilters(){
+  Object.keys(filt).forEach(k=>{ Array.isArray(filt[k]) ? filt[k]=[] : filt[k]=null })
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'))
+  document.getElementById('search').value=''
+  render()
+}
+
+// ── add / edit ──
+function openAdd(){ editId=null; clearForm(); document.getElementById('modal-title').textContent='添加条目'; document.getElementById('modal').classList.add('open') }
+function closeModal(){ document.getElementById('modal').classList.remove('open') }
+function clearForm(){
+  ['name','soc','e9','tritype','instinct','attitude','love','wuxing','xingzuo'].forEach(f=>{ document.getElementById('f-'+f).value='' })
+  document.getElementById('f-mbti-sel').value=''
+  document.getElementById('f-identity').value=''
+}
+
+async function submitForm(){
+  const name = document.getElementById('f-name').value.trim()
+  if(!name){ alert('姓名不能为空'); return }
+  const row = {
+    name, mbti: document.getElementById('f-mbti-sel').value,
+    soc: document.getElementById('f-soc').value.trim(),
+    e9:  document.getElementById('f-e9').value.trim(),
+    tritype:  document.getElementById('f-tritype').value.trim(),
+    instinct: document.getElementById('f-instinct').value.trim(),
+    attitude: document.getElementById('f-attitude').value.trim(),
+    love_psych: document.getElementById('f-love').value.trim(),
+    identity: document.getElementById('f-identity').value,
+    wuxing:   document.getElementById('f-wuxing').value.trim(),
+    xingzuo:  document.getElementById('f-xingzuo').value.trim(),
+  }
+  const { data: inserted, error } = await db.from('panjing').insert(row).select()
+  if(error){ alert('保存失败: '+error.message); return }
+  if(inserted && inserted.length) allData.push(inserted[0])
+  closeModal()
+  buildFilters()
+  render()
+  setStatus('已保存 · '+new Date().toLocaleTimeString('zh-CN'))
+}
+
+async function delRow(id){
+  if(!confirm('确认删除？')) return
+  const { error } = await db.from('panjing').delete().eq('id',id)
+  if(error){ alert('删除失败: '+error.message); return }
+  allData = allData.filter(r=>r.id!==id)
+  render()
+  setStatus('已删除 · '+new Date().toLocaleTimeString('zh-CN'))
+}
+
+// ── import initial data ──
+const INITIAL = [{"name":"薯","mbti":"ENFP","soc":"ILE","tritype":"748发动者","e9":"7w6","wuxing":"壬水","attitude":"","xingzuo":"水瓶, 🌕双鱼, ⬆️处女","instinct":"so8, sx4, sx7","laizi":"","identity":"素人","love_psych":""},{"name":"粥","mbti":"ISFP","soc":"IEI","tritype":"459离群的内向者","e9":"4w5","wuxing":"土戊","attitude":"","xingzuo":"天秤, 🌕天蝎, ⬆️天秤","instinct":"sp4, sp9, sx5","laizi":"","identity":"素人","love_psych":""},{"name":"马婧仪","mbti":"ENFJ","soc":"EIE","tritype":"137促动者","e9":"1w2","wuxing":"土己","attitude":"","xingzuo":"天秤, 🌕射手","instinct":"so3, so7, sx1","laizi":"","identity":"素人","love_psych":""},{"name":"张峻豪","mbti":"ISFP","soc":"ESI","tritype":"936社区建造者","e9":"9w1","wuxing":"乙木","attitude":"","xingzuo":"巨蟹, 🌕天秤","instinct":"sp6, sp9, sx3","laizi":"养成系","identity":"明星","love_psych":""},{"name":"赵浦伊","mbti":"ISTJ","soc":"","tritype":"631支持者","e9":"3w4","wuxing":"","attitude":"","xingzuo":"摩羯","instinct":"sp1, sp3, sx6","laizi":"","identity":"素人","love_psych":""},{"name":"葛佳宁","mbti":"ESFP","soc":"","tritype":"739友好大使","e9":"7w6","wuxing":"土戊","attitude":"","xingzuo":"摩羯, 🌕双鱼, ⬆️金牛","instinct":"so, sx","laizi":"","identity":"素人","love_psych":""},{"name":"陈莆文","mbti":"ENTP","soc":"","tritype":"784曲线中的冲浪者","e9":"7w8","wuxing":"","attitude":"","xingzuo":"水瓶","instinct":"sp, sx","laizi":"","identity":"素人","love_psych":""},{"name":"莫宗滢","mbti":"ISTP","soc":"","tritype":"379冷静的人","e9":"3w2","wuxing":"庚金","attitude":"","xingzuo":"摩羯, 🌕水瓶, ⬆️双鱼","instinct":"sp7, sx3, sx9","laizi":"","identity":"素人","love_psych":""},{"name":"碗盆姐","mbti":"ISFJ","soc":"SEI","tritype":"693不重要的人","e9":"6w7","wuxing":"庚金","attitude":"","xingzuo":"天蝎, 🌕水瓶, ⬆️处女","instinct":"so9, sp3, sp6","laizi":"","identity":"素人","love_psych":""},{"name":"疫苗","mbti":"ISFJ","soc":"","tritype":"692和平主义者","e9":"6w5","wuxing":"丁火","attitude":"","xingzuo":"天蝎, 🌕金牛, ⬆️金牛","instinct":"sp2, sp6, sx9","laizi":"","identity":"素人","love_psych":""},{"name":"澳洲女同","mbti":"ISTP","soc":"","tritype":"963和平缔造者","e9":"9w1","wuxing":"辛金","attitude":"","xingzuo":"白羊, 🌕摩羯, ⬆️天秤","instinct":"so, sp","laizi":"","identity":"素人","love_psych":""},{"name":"澳洲教友","mbti":"ENFJ","soc":"","tritype":"261尽责的激进分子","e9":"2w3","wuxing":"乙木","attitude":"","xingzuo":"处女, 🌕巨蟹, ⬆️天蝎","instinct":"sp2","laizi":"","identity":"素人","love_psych":""},{"name":"李安琪","mbti":"ISFJ","soc":"","tritype":"694和平寻求者","e9":"6w5","wuxing":"土戊","attitude":"","xingzuo":"摩羯, ⬆️天蝎, ⬆️水瓶","instinct":"sp, sx","laizi":"","identity":"素人","love_psych":""},{"name":"游泳友","mbti":"ENFJ","soc":"","tritype":"297和平特使","e9":"2w3","wuxing":"","attitude":"","xingzuo":"金牛","instinct":"so, sx","laizi":"","identity":"素人","love_psych":""},{"name":"脚友","mbti":"INFJ","soc":"","tritype":"513技术人员","e9":"5w4","wuxing":"","attitude":"","xingzuo":"","instinct":"sp1","laizi":"","identity":"素人","love_psych":""},{"name":"2月2","mbti":"INFJ","soc":"","tritype":"396遵守规则者","e9":"3w4","wuxing":"","attitude":"","xingzuo":"","instinct":"sp3, sp9, sx6","laizi":"","identity":"素人","love_psych":""},{"name":"多吃蔬菜","mbti":"ENFJ","soc":"SEI","tritype":"927追寻和平者","e9":"9w1","wuxing":"乙木","attitude":"","xingzuo":"摩羯, 🌕摩羯, ⬆️水瓶","instinct":"so2, sp7, sp9","laizi":"","identity":"素人","love_psych":""},{"name":"前室友","mbti":"INFJ","soc":"","tritype":"164反动者","e9":"1w2","wuxing":"壬水","attitude":"","xingzuo":"狮子, 🌕天蝎, ⬆️摩羯","instinct":"so4, sp1, sp6","laizi":"","identity":"素人","love_psych":""},{"name":"火灾","mbti":"INFJ","soc":"EIE","tritype":"496真相寻求者","e9":"4w3","wuxing":"水癸","attitude":"","xingzuo":"巨蟹, 🌕摩羯, ⬆️水瓶","instinct":"so4, sp6, sp9","laizi":"","identity":"素人","love_psych":""},{"name":"intoone丝","mbti":"ENTP","soc":"","tritype":"739友好大使","e9":"7w6","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sx","laizi":"","identity":"素人","love_psych":""},{"name":"千叶","mbti":"ENTJ","soc":"","tritype":"837企业家","e9":"8w7","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sx","laizi":"","identity":"素人","love_psych":""},{"name":"粥室友","mbti":"ESFP","soc":"","tritype":"639适应者","e9":"6w7","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sx","laizi":"","identity":"素人","love_psych":""},{"name":"刘爽","mbti":"INTP","soc":"","tritype":"584偶像破坏者","e9":"5w4","wuxing":"","attitude":"","xingzuo":"","instinct":"sp, sx","laizi":"再见爱人","identity":"网红","love_psych":""},{"name":"虞书欣","mbti":"ESFP","soc":"","tritype":"793建立联系网络的人","e9":"7w8","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sx","laizi":"","identity":"明星","love_psych":""},{"name":"王鹤棣","mbti":"ESTP","soc":"","tritype":"738开拓者","e9":"7w8","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sx","laizi":"","identity":"明星","love_psych":""},{"name":"穆祉丞","mbti":"ENFP","soc":"EIE","tritype":"728激励者","e9":"7w8","wuxing":"木甲","attitude":"","xingzuo":"天蝎, 🌕水瓶","instinct":"so8, sx2, sx7","laizi":"养成系","identity":"明星","love_psych":""},{"name":"黄子韬","mbti":"ESFP","soc":"","tritype":"873调动者","e9":"8w7","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sx","laizi":"","identity":"明星","love_psych":""},{"name":"余宇涵","mbti":"ENFJ","soc":"SLE","tritype":"386鼓动者","e9":"3w2","wuxing":"丁火","attitude":"","xingzuo":"射手, 🌕摩羯","instinct":"so3, sx6, sx8","laizi":"养成系","identity":"明星","love_psych":""},{"name":"陈天润","mbti":"INTJ","soc":"ILI","tritype":"541象牙塔的居民","e9":"5w6","wuxing":"土戊","attitude":"","xingzuo":"双子, 🌕处女","instinct":"sp5, sx1, sx4","laizi":"养成系","identity":"明星","love_psych":""},{"name":"邓佳鑫","mbti":"ENFP","soc":"LSI","tritype":"714创新者","e9":"1w9","wuxing":"水癸","attitude":"","xingzuo":"狮子, ⬆️巨蟹","instinct":"sp4, sp7, sx1","laizi":"养成系","identity":"明星","love_psych":""},{"name":"佚村夫","mbti":"INFP","soc":"","tritype":"479飘渺的人","e9":"4w5","wuxing":"","attitude":"","xingzuo":"","instinct":"sp, sx","laizi":"","identity":"网红","love_psych":""},{"name":"张泽禹","mbti":"ESTJ","soc":"LSE","tritype":"937积极的朋友","e9":"9w8","wuxing":"木甲","attitude":"","xingzuo":"金牛, 🌕天秤","instinct":"so3, sp7, sp9","laizi":"养成系","identity":"明星","love_psych":""},{"name":"小潘","mbti":"ESTJ","soc":"SLI","tritype":"973促进者","e9":"9w8","wuxing":"壬水","attitude":"","xingzuo":"狮子, 🌕巨蟹, ⬆️双鱼","instinct":"so, sx","laizi":"","identity":"素人","love_psych":""},{"name":"林墨","mbti":"ESTP","soc":"","tritype":"387成就者","e9":"3w2","wuxing":"","attitude":"","xingzuo":"","instinct":"so7, so8, sx3","laizi":"养成系","identity":"明星","love_psych":""},{"name":"苏新皓","mbti":"ENTJ","soc":"LIE","tritype":"837企业家","e9":"8w7","wuxing":"丙火","attitude":"","xingzuo":"摩羯, 🌕天蝎","instinct":"sp7, sx3, sx8","laizi":"养成系","identity":"明星","love_psych":""},{"name":"朱志鑫","mbti":"ISFJ","soc":"ESI","tritype":"629支持者","e9":"6w5","wuxing":"丁火","attitude":"","xingzuo":"天蝎, 🌕巨蟹","instinct":"sp2, sx6, sx9","laizi":"养成系","identity":"明星","love_psych":""},{"name":"左航","mbti":"ENTP","soc":"ILE","tritype":"749吟游诗人","e9":"7w6","wuxing":"辛金","attitude":"","xingzuo":"双子, 🌕双鱼","instinct":"so4, so7, sp9","laizi":"养成系","identity":"明星","love_psych":""},{"name":"张极","mbti":"INFP","soc":"EII","tritype":"974自我怀疑者","e9":"9w1","wuxing":"土戊","attitude":"","xingzuo":"水瓶, 🌕狮子","instinct":"so4, so9, sp7","laizi":"养成系","identity":"明星","love_psych":""},{"name":"ESTJ姐","mbti":"ESTJ","soc":"","tritype":"836阁下","e9":"8w7","wuxing":"土己","attitude":"","xingzuo":"处女, 🌕摩羯, ⬆️处女","instinct":"so, sp","laizi":"","identity":"素人","love_psych":""},{"name":"马嘉祺","mbti":"ISTJ","soc":"EII","tritype":"469焦虑的个人主义者","e9":"4w3","wuxing":"木甲","attitude":"","xingzuo":"射手, 🌕双鱼","instinct":"sp4, sp6, sx9","laizi":"养成系","identity":"明星","love_psych":""},{"name":"丁程鑫","mbti":"ESFJ","soc":"ESE","tritype":"286蛮横的人","e9":"2w3","wuxing":"水癸","attitude":"","xingzuo":"双鱼, 🌕巨蟹","instinct":"so2, so6, sp8","laizi":"养成系","identity":"明星","love_psych":""},{"name":"宋亚轩","mbti":"INTP","soc":"LII","tritype":"927追寻和平者","e9":"9w1","wuxing":"壬水","attitude":"","xingzuo":"双鱼, 🌕狮子","instinct":"sp2, sp9, sx7","laizi":"养成系","identity":"明星","love_psych":""},{"name":"刘耀文","mbti":"ESFP","soc":"ESE","tritype":"629支持者","e9":"6w7","wuxing":"庚金","attitude":"","xingzuo":"天秤, 🌕双子","instinct":"sp9, sx3, sx6","laizi":"养成系","identity":"明星","love_psych":""},{"name":"张真源","mbti":"INFJ","soc":"ESI","tritype":"639适应者","e9":"6w5","wuxing":"土己","attitude":"","xingzuo":"白羊, 🌕天秤","instinct":"so3, so9, sp6","laizi":"养成系","identity":"明星","love_psych":""},{"name":"严浩翔","mbti":"ESTJ","soc":"LSE","tritype":"369公民","e9":"3w4","wuxing":"丁火","attitude":"","xingzuo":"狮子, 🌕狮子","instinct":"so3, so9, sx6","laizi":"养成系","identity":"明星","love_psych":""},{"name":"贺峻霖","mbti":"ENFJ","soc":"EIE","tritype":"371帝国建设者","e9":"3w2","wuxing":"乙木","attitude":"","xingzuo":"双子, 🌕金牛","instinct":"so1, so3, sp7","laizi":"养成系","identity":"明星","love_psych":""},{"name":"李行亮","mbti":"ISTJ","soc":"","tritype":"945和平的协调者","e9":"9w1","wuxing":"","attitude":"","xingzuo":"","instinct":"sp, sx","laizi":"再见爱人","identity":"明星","love_psych":""},{"name":"麦琳","mbti":"ESFJ","soc":"","tritype":"216照顾者","e9":"2w3","wuxing":"","attitude":"","xingzuo":"","instinct":"sp, sx","laizi":"再见爱人","identity":"网红","love_psych":""},{"name":"陈泗旭","mbti":"INTP","soc":"ILI","tritype":"549深奥的梦想家","e9":"5w4","wuxing":"辛金","attitude":"","xingzuo":"水瓶, 🌕天蝎","instinct":"sp, sx","laizi":"养成系","identity":"明星","love_psych":""},{"name":"葛夕","mbti":"ENTJ","soc":"","tritype":"216照顾者","e9":"2w1","wuxing":"","attitude":"","xingzuo":"","instinct":"sp, sx","laizi":"再见爱人","identity":"网红","love_psych":""},{"name":"黄圣依","mbti":"ISFJ","soc":"","tritype":"396遵守规则者","e9":"3w4","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sp","laizi":"再见爱人","identity":"明星","love_psych":""},{"name":"杨子","mbti":"ENTP","soc":"","tritype":"783改革者","e9":"7w8","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sx","laizi":"再见爱人","identity":"明星","love_psych":""},{"name":"黄朔","mbti":"INFJ","soc":"SEI","tritype":"937积极的朋友","e9":"9w1","wuxing":"丁火","attitude":"","xingzuo":"天秤, 🌕巨蟹","instinct":"so7, so9, sp3","laizi":"养成系","identity":"明星","love_psych":""},{"name":"童禹坤","mbti":"ESFJ","soc":"SEI","tritype":"962焦虑的朋友","e9":"9w1","wuxing":"丁火","attitude":"","xingzuo":"巨蟹, 🌕天蝎","instinct":"so2, sx6, sx9","laizi":"养成系","identity":"明星","love_psych":""},{"name":"峰哥","mbti":"ENTP","soc":"","tritype":"738开拓者","e9":"7w8","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sx","laizi":"","identity":"网红","love_psych":""},{"name":"张子墨","mbti":"ENFP","soc":"IEE","tritype":"739友好大使","e9":"7w6","wuxing":"庚金","attitude":"","xingzuo":"双鱼, 🌕狮子","instinct":"so, sx","laizi":"养成系","identity":"明星","love_psych":""},{"name":"许雅婷","mbti":"INFJ","soc":"","tritype":"371帝国建设者","e9":"3w4","wuxing":"水癸","attitude":"","xingzuo":"金牛, 🌕处女, ⬆️射手","instinct":"so, sx","laizi":"","identity":"素人","love_psych":""},{"name":"日本游友","mbti":"ISFJ","soc":"","tritype":"649怀疑者","e9":"6w5","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sp","laizi":"","identity":"素人","love_psych":""},{"name":"张冰蟾","mbti":"ENTP","soc":"","tritype":"371帝国建设者","e9":"3w2","wuxing":"水癸","attitude":"","xingzuo":"金牛, 🌕天蝎, ⬆️天秤","instinct":"so, sp","laizi":"","identity":"素人","love_psych":""},{"name":"黄执中","mbti":"INTJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人, 再见爱人观察","identity":"网红","love_psych":""},{"name":"Papi酱","mbti":"ENFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人, 再见爱人观察","identity":"网红","love_psych":""},{"name":"武艺","mbti":"INFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人, 再见爱人观察","identity":"明星","love_psych":""},{"name":"沈奕斐","mbti":"ENFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人, 再见爱人观察","identity":"网红","love_psych":""},{"name":"侯佩岑","mbti":"ESFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人, 再见爱人观察","identity":"明星","love_psych":""},{"name":"胡彦斌","mbti":"ISTP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人, 再见爱人观察","identity":"明星","love_psych":""},{"name":"二喜","mbti":"ENFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"曹光","mbti":"INTP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"肖奈","mbti":"INTJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"贝微微","mbti":"ISFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"priest","mbti":"INTJ","soc":"","tritype":"361领导者","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"","identity":"作者","love_psych":""},{"name":"水千丞","mbti":"ENTJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"","identity":"作者","love_psych":""},{"name":"KO","mbti":"ISTP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"美人师兄","mbti":"ENFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"真水无香","mbti":"ESFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"何以琛","mbti":"INTJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"赵默笙","mbti":"ENFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"何以玫","mbti":"ESFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"封腾","mbti":"ENTJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"薛杉杉","mbti":"ESFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"于途","mbti":"INFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"乔晶晶","mbti":"ESFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"顾漫","identity":"角色","love_psych":""},{"name":"张硕","mbti":"ESTP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人","identity":"网红","love_psych":""},{"name":"王睡睡","mbti":"ESTJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人","identity":"网红","love_psych":""},{"name":"老刘","mbti":"INFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人","identity":"网红","love_psych":""},{"name":"傅首尔","mbti":"ENFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人","identity":"网红","love_psych":""},{"name":"老纪","mbti":"ESTJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人","identity":"网红","love_psych":""},{"name":"王诗晴","mbti":"ESFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"再见爱人","identity":"网红","love_psych":""},{"name":"张康乐","mbti":"ISFP","soc":"SEI","tritype":"926和平缔造者","e9":"9w1","wuxing":"","attitude":"","xingzuo":"","instinct":"sp9","laizi":"内娱演员","identity":"明星","love_psych":""},{"name":"马柏全","mbti":"ESTJ","soc":"LIE","tritype":"358麻烦终结者","e9":"3w4","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sx","laizi":"内娱演员","identity":"明星","love_psych":""},{"name":"Vernon","mbti":"ISTP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"Hoshi","mbti":"ENFP","soc":"LIE","tritype":"378外向的人","e9":"3w4","wuxing":"","attitude":"","xingzuo":"","instinct":"so, sx","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"尹净汉","mbti":"ISFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"全圆佑","mbti":"INFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"李知勋","mbti":"INFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"洪知秀","mbti":"ENFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"金珉奎","mbti":"ESFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"徐明浩","mbti":"INFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"夫胜宽","mbti":"ESFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"崔胜澈","mbti":"ISFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"DK","mbti":"ESFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"Dino","mbti":"ENFJ","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"文俊辉","mbti":"ESTP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"Seventeen","identity":"明星","love_psych":""},{"name":"奶油","mbti":"INFJ","soc":"","tritype":"369公民","e9":"3w2","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"","identity":"素人","love_psych":""},{"name":"张元英","mbti":"ESFJ","soc":"","tritype":"316专业人士","e9":"3w2","wuxing":"","attitude":"","xingzuo":"","instinct":"so3","laizi":"kpop","identity":"明星","love_psych":""},{"name":"枯矾","mbti":"INFP","soc":"","tritype":"548赫尔墨斯主义者","e9":"5w4","wuxing":"","attitude":"","xingzuo":"","instinct":"sx5","laizi":"","identity":"素人","love_psych":""},{"name":"王青菜","mbti":"ENFP","soc":"IEE","tritype":"729协调者","e9":"7w6","wuxing":"","attitude":"","xingzuo":"","instinct":"so2, so9, sx7","laizi":"","identity":"素人","love_psych":""},{"name":"权志龙","mbti":"ENTP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"kpop","identity":"明星","love_psych":""},{"name":"Sana","mbti":"ESFJ","soc":"","tritype":"297和平特使","e9":"2w3","wuxing":"","attitude":"","xingzuo":"","instinct":"so7, so9, sx2","laizi":"kpop","identity":"明星","love_psych":""},{"name":"崔秀彬","mbti":"INFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"kpop","identity":"明星","love_psych":""},{"name":"四夕小田木","mbti":"INFP","soc":"","tritype":"","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"","identity":"网红","love_psych":""},{"name":"老累","mbti":"INTJ","soc":"","tritype":"351客观主义者","e9":"3w4","wuxing":"","attitude":"","xingzuo":"","instinct":"sx","laizi":"","identity":"网红","love_psych":""},{"name":"para","mbti":"INFP","soc":"","tritype":"925问题评审员","e9":"9w1","wuxing":"","attitude":"","xingzuo":"","instinct":"so2, sp5, sp9","laizi":"","identity":"素人","love_psych":""},{"name":"王乐音","mbti":"ENFP","soc":"","tritype":"739友好大使","e9":"7w6","wuxing":"","attitude":"","xingzuo":"","instinct":"so3, so9, sx7","laizi":"","identity":"素人","love_psych":""},{"name":"孙亦航","mbti":"ENTP","soc":"","tritype":"629支持者","e9":"6w7","wuxing":"","attitude":"","xingzuo":"","instinct":"so9, sp2, sp6","laizi":"养成系","identity":"明星","love_psych":""},{"name":"自认intj友","mbti":"ISTJ","soc":"SLI","tritype":"163栋梁","e9":"1w9","wuxing":"","attitude":"","xingzuo":"","instinct":"so3, sp1, sp6","laizi":"","identity":"素人","love_psych":""},{"name":"特妹头","mbti":"ISTP","soc":"","tritype":"836阁下","e9":"8w7","wuxing":"","attitude":"","xingzuo":"","instinct":"so6, so8, sx3","laizi":"","identity":"","love_psych":""},{"name":"小乖","mbti":"INFJ","soc":"","tritype":"952同伴","e9":"","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"","identity":"","love_psych":""},{"name":"小咪","mbti":"INTJ","soc":"","tritype":"316专业人士","e9":"3w4","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"","identity":"","love_psych":""},{"name":"Remi Wolf","mbti":"ENFP","soc":"","tritype":"783改革者","e9":"7w8","wuxing":"","attitude":"","xingzuo":"水瓶, ⬆️双鱼","instinct":"so3, so8, sx7","laizi":"","identity":"明星","love_psych":""},{"name":"勃人转","mbti":"INTP","soc":"","tritype":"549深奥的梦想家","e9":"5w4","wuxing":"","attitude":"","xingzuo":"","instinct":"","laizi":"","identity":"","love_psych":""},{"name":"wyd","mbti":"ISFP","soc":"SEI","tritype":"964优柔寡断者","e9":"9w8","wuxing":"","attitude":"","xingzuo":"处女, 🌕水瓶, ⬆️射手","instinct":"sp4, sp9, sx6","laizi":"","identity":"素人","love_psych":""}]
+
+async function importInitial(){
+  setStatus('导入中...')
+  const { error } = await db.from('panjing').insert(INITIAL)
+  if(error){ setStatus('导入失败: '+error.message); return }
+  document.getElementById('import-banner').style.display='none'
+  loadData()
+}
+
+function setStatus(msg){ document.getElementById('statusbar').textContent = msg }
+
+// ── init ──
+document.getElementById('search').addEventListener('input', render)
+checkConn()
+migrateData().then(()=>loadData())
+
+async function migrateData(){
+  // 把数据库里残留的"作家"改为"作者"
+  await db.from('panjing').update({identity:'作者'}).eq('identity','作家')
+  // 五行格式迁移：把"X, Y"改为"XY"
+  const { data: wxRows } = await db.from('panjing').select('id, wuxing').like('wuxing', '%, %')
+  if(wxRows){ for(const r of wxRows){ const parts=r.wuxing.split(',').map(s=>s.trim()); if(parts.length===2) await db.from('panjing').update({wuxing:parts.join('')}).eq('id',r.id) } }
+  // 重排星座顺序：无emoji → 🌕 → ⬆️
+  const { data } = await db.from('panjing').select('id, xingzuo').not('xingzuo', 'is', null).neq('xingzuo', '')
+  if(!data) return
+  const updates = []
+  data.forEach(r=>{
+    const parts = (r.xingzuo||'').split(',').map(s=>s.trim()).filter(Boolean)
+    if(parts.length < 2) return
+    const sun=[], moon=[], rising=[]
+    parts.forEach(p=>{ if(p.includes('🌕')) moon.push(p); else if(p.includes('⬆️')) rising.push(p); else sun.push(p) })
+    const reordered = [...sun, ...moon, ...rising].join(', ')
+    if(reordered !== r.xingzuo) updates.push({id: r.id, xingzuo: reordered})
+  })
+  for(const u of updates){ await db.from('panjing').update({xingzuo: u.xingzuo}).eq('id', u.id) }
+}
+</script>
+</body>
+</html>
