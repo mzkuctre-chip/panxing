@@ -604,9 +604,12 @@ tbody td[data-col=name] {
       <span class="eyebrow">Typology · 人格类型学</span>
       <h1>判型数据库 <span class="ja">薯&amp;粥&rsquo;s PDB</span></h1>
     </div>
-    <div class="conn">
-      <span class="dot loading" id="conn-dot"></span>
-      <span id="conn-label">连接中</span>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="conn">
+        <span class="dot loading" id="conn-dot"></span>
+        <span id="conn-label">连接中</span>
+      </div>
+      <button id="lock-btn" onclick="showAdminLogin()" title="管理员登录" style="background:none;border:none;font-size:16px;cursor:pointer;padding:4px;color:var(--ink3);line-height:1">🔒</button>
     </div>
   </header>
 
@@ -710,6 +713,22 @@ tbody td[data-col=name] {
   </footer>
 </div>
 
+<!-- Admin Login Modal -->
+<div class="modal-overlay" id="admin-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:340px">
+    <h2>管理员登录</h2>
+    <div class="form-row">
+      <label>密码</label>
+      <input id="admin-pw" type="password" placeholder="输入管理员密码" autocomplete="current-password">
+    </div>
+    <div id="admin-err" style="font-size:12px;color:var(--accent);min-height:18px;margin-top:-4px"></div>
+    <div class="form-actions">
+      <button onclick="document.getElementById('admin-modal').classList.remove('open')">取消</button>
+      <button class="btn-primary" onclick="tryLogin()">登录</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add/Edit Modal -->
 <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
@@ -756,7 +775,23 @@ const SUPABASE_KEY = 'sb_publishable_NM2_44Uz8Txp31YNzWKMpA_cHD53YRD'
 const { createClient } = supabase
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-const SHARE_MODE = new URLSearchParams(location.search).has('share')
+const ADMIN_HASH = '8561d5a0e1acdf82807126d8248289c5ea224fbe01b6d59f3229040193301082'
+const ADMIN_UNLOCKED = sessionStorage.getItem('pdb_admin') === '1'
+const SHARE_MODE = !ADMIN_UNLOCKED
+
+async function _h(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('') }
+
+function showAdminLogin(){
+  document.getElementById('admin-modal').classList.add('open')
+  setTimeout(()=>document.getElementById('admin-pw').focus(), 50)
+}
+async function tryLogin(){
+  const pw = document.getElementById('admin-pw').value
+  const h = await _h(pw)
+  if(h === ADMIN_HASH){ sessionStorage.setItem('pdb_admin','1'); location.reload() }
+  else { document.getElementById('admin-err').textContent='密码错误'; document.getElementById('admin-pw').select() }
+}
+function adminLogout(){ sessionStorage.removeItem('pdb_admin'); location.reload() }
 
 const MBTI_Y = new Set(['ESFP','ISFP','ISTP','ESTP'])
 const MBTI_G = new Set(['ENFP','INFP','INFJ','ENFJ'])
@@ -1081,12 +1116,16 @@ if(SHARE_MODE){
   document.getElementById('btn-add').style.display = 'none'
   document.getElementById('btn-refresh').style.display = 'none'
   document.getElementById('import-banner').style.display = 'none'
+  document.getElementById('lock-btn').title = '管理员登录'
 } else {
   document.getElementById('share-btn').style.display = ''
+  document.getElementById('lock-btn').textContent = '🔓'
+  document.getElementById('lock-btn').title = '退出管理员'
+  document.getElementById('lock-btn').onclick = adminLogout
 }
 
 function copyShareLink(){
-  const url = location.origin + location.pathname + '?share'
+  const url = location.origin + location.pathname
   navigator.clipboard.writeText(url).then(()=>{
     const btn = document.getElementById('share-btn')
     const orig = btn.textContent
@@ -1094,6 +1133,8 @@ function copyShareLink(){
     setTimeout(()=>{ btn.textContent = orig }, 2000)
   })
 }
+
+document.getElementById('admin-pw').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin() })
 
 // ── init ──
 document.getElementById('search').addEventListener('input', render)
