@@ -279,6 +279,20 @@ button:hover { background: var(--surface2); border-color: var(--ink4); }
 @keyframes drip    { 0%,100%{transform:translateY(0) scaleY(1)} 50%{transform:translateY(1.5px) scaleY(0.88)} }
 @keyframes drift   { 0%,100%{transform:translateX(-1.5px)} 50%{transform:translateX(1.5px)} }
 
+/* ── 阳干/阴干 chip colors ── */
+.chip.yy-yang { background: #ffffff; color: #1c1916; border-color: rgba(28,25,22,0.35); }
+.chip.yy-yin  { background: #1c1916; color: #f0ebdf; border-color: rgba(28,25,22,0.6); }
+.chip.yy-yang:hover { background: #f0ece4; border-color: #1c1916; }
+.chip.yy-yin:hover  { background: #333028; border-color: #f0ebdf; }
+.chip.yy-yang.on { background: #1c1916; color: #faf6ef; border-color: #1c1916; box-shadow: inset 0 0 0 1px #1c1916; }
+.chip.yy-yin.on  { background: #000; color: #f0ebdf; border-color: #f0ebdf; box-shadow: inset 0 0 0 1px #f0ebdf; }
+@media (prefers-color-scheme: dark) {
+  .chip.yy-yang { background: #f0ebdf; color: #1c1916; border-color: rgba(240,235,223,0.5); }
+  .chip.yy-yin  { background: #0a0908; color: #b8b1a3; border-color: rgba(240,235,223,0.2); }
+  .chip.yy-yang.on { background: #f0ebdf; color: #1c1916; border-color: #f0ebdf; }
+  .chip.yy-yin.on  { background: #0a0908; color: #f0ebdf; border-color: #f0ebdf; box-shadow: inset 0 0 0 1px #f0ebdf; }
+}
+
 /* ── MBTI temperament chip colors (matches table badges mb-y/g/p/b) ── */
 .chip.t-sp { background: var(--amber-bg); color: var(--amber-fg); border-color: rgba(107,74,20,0.30); }
 .chip.t-nf { background: var(--green-bg); color: var(--green);    border-color: rgba(47,96,72,0.30); }
@@ -657,6 +671,8 @@ tbody td[data-col=name] {
     <div class="filter-row">
       <span class="filter-label">五行</span>
       <div id="f-wx" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+      <div style="width:1px;background:var(--rule2);margin:2px 6px;align-self:stretch"></div>
+      <div id="f-yinyang" style="display:flex;gap:6px"></div>
     </div>
     <div class="filter-row">
       <span class="filter-label">星座</span>
@@ -803,10 +819,13 @@ function splitTrim(s){ return (s||'').split(',').map(v=>v.trim()).filter(Boolean
 function normStar(s){ return s.replace(/⬆️|🌕/g,'').trim() }
 function getXx(soc){ const m=(soc||'').match(/[αβγδ]/); return m?m[0]:'' }
 function getInst(s){ return splitTrim(s).map(v=>v.slice(0,2)).filter(v=>['so','sp','sx'].includes(v)) }
+const YANG_STEMS = new Set(['甲','丙','戊','庚','壬'])
+const YIN_STEMS  = new Set(['乙','丁','己','辛','癸'])
+function getYinYang(wx){ const s=(wx||'')[0]; return YANG_STEMS.has(s)?'yang':YIN_STEMS.has(s)?'yin':null }
 
 let allData = []
 let sortCol = 'name', sortDir = 1
-const filt = { shenfen:null, mbti:[], soctype:[], e9:[], inst:[], wx:[], star:[], attitude:[], love:[] }
+const filt = { shenfen:null, mbti:[], soctype:[], e9:[], inst:[], wx:[], yinyang:null, star:[], attitude:[], love:[] }
 let editId = null
 let saveTimer = {}
 
@@ -843,8 +862,9 @@ async function loadData(){
 function getFiltered(){
   const q = document.getElementById('search').value.toLowerCase()
   return allData.filter(r=>{
-    if(SHARE_MODE && r.identity === '素人') return false
-    if(filt.shenfen && r.identity !== filt.shenfen) return false
+    if(SHARE_MODE && (r.identity === '素人' || !r.identity)) return false
+    if(filt.shenfen === '无标签'){ if(r.identity) return false }
+    else if(filt.shenfen && r.identity !== filt.shenfen) return false
     if(filt.mbti.length && !filt.mbti.includes(r.mbti)) return false
     if(filt.soctype.length && !filt.soctype.some(s=>(r.soc||'').includes(s))) return false
     if(filt.e9.length && !filt.e9.includes(r.e9)) return false
@@ -856,6 +876,7 @@ function getFiltered(){
       if(excluded.some(f=>ri.includes(f))) return false
     }
     if(filt.wx.length   && !filt.wx.some(f=>(r.wuxing||'').includes(f))) return false
+    if(filt.yinyang && getYinYang(r.wuxing) !== filt.yinyang) return false
     if(filt.star.length && !filt.star.some(f=>splitTrim(r.xingzuo).map(normStar).includes(f))) return false
     if(filt.attitude.length && !filt.attitude.includes(r.attitude)) return false
     if(filt.love.length     && !filt.love.includes(r.love_psych)) return false
@@ -938,13 +959,32 @@ function render(){
     setTimeout(()=>document.addEventListener('mousedown', outside), 50)
   }
   if(!SHARE_MODE){
+    // MBTI: click → text input
     tbody.querySelectorAll('.td-mbti').forEach(td=>{
-      td.style.cursor='pointer'
-      td.onclick = ()=>makeSelect(td, MBTI_LIST, 'mbti')
+      td.style.cursor='text'
+      td.onclick = ()=>{
+        if(td.querySelector('input')) return
+        const id = +td.dataset.id
+        const rec = allData.find(r=>r.id===id)
+        const input = document.createElement('input')
+        input.type='text'; input.value=rec?(rec.mbti||''):''
+        input.style.cssText='font-size:11px;font-family:var(--mono);padding:2px 6px;border-radius:4px;border:1px solid var(--accent);background:var(--accent-bg);color:var(--ink);width:5em;outline:none;letter-spacing:0.04em'
+        td.innerHTML=''; td.appendChild(input)
+        input.focus(); input.select()
+        const save=async()=>{ const val=input.value.trim().toUpperCase(); if(rec)rec.mbti=val; await saveCell(id,'mbti',val,null); render() }
+        input.addEventListener('blur',save)
+        input.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();input.blur()} })
+      }
     })
+    // Identity: inline native select (works on mobile)
     tbody.querySelectorAll('.td-identity').forEach(td=>{
-      td.style.cursor='pointer'
-      td.onclick = ()=>makeSelect(td, ID_LIST, 'identity')
+      const id = +td.dataset.id
+      const rec = allData.find(r=>r.id===id)
+      const sel = document.createElement('select')
+      sel.style.cssText='font-size:10px;font-family:var(--mono);padding:2px 3px;border:1px solid var(--rule2);border-radius:3px;background:var(--bg);color:var(--ink);cursor:pointer;max-width:64px'
+      ;['','明星','素人','网红','角色','作者'].forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v||'—'; if(v===(rec?.identity||''))o.selected=true; sel.appendChild(o) })
+      sel.onchange=async()=>{ const val=sel.value; if(rec)rec.identity=val; await saveCell(id,'identity',val,null); render() }
+      td.innerHTML=''; td.appendChild(sel)
     })
   }
 
@@ -954,7 +994,7 @@ function render(){
     <div class="stat"><strong>${allData.length}</strong>总计</div>
     <div class="stat"><strong>${rows.length}</strong>筛选</div>
     <div class="stat"><strong>${byId['明星']||0}</strong>明星</div>
-    <div class="stat"><strong>${byId['素人']||0}</strong>素人</div>
+    ${SHARE_MODE ? '' : `<div class="stat"><strong>${byId['素人']||0}</strong>素人</div>`}
     <div class="stat"><strong>${byId['网红']||0}</strong>网红</div>
   `
 
@@ -977,7 +1017,7 @@ function sortBy(col){ sortCol===col ? sortDir*=-1 : (sortCol=col, sortDir=1); re
 
 function buildFilters(){
   const e9Vals   = [...new Set(allData.map(r=>r.e9).filter(Boolean))].sort()
-  bc('f-shenfen', SHARE_MODE ? ['明星','网红','角色','作者'] : ['明星','素人','网红','角色','作者'], 'shenfen', false)
+  bc('f-shenfen', SHARE_MODE ? ['明星','网红','角色','作者'] : ['明星','素人','网红','角色','作者','无标签'], 'shenfen', false)
   // MBTI grouped by temperament: SP / NF / NT / SJ (each with its color)
   bc('f-mbti-sp', ['ESFP','ISFP','ESTP','ISTP'].map(v=>({v,cls:'t-sp'})), 'mbti', true)
   bc('f-mbti-nf', ['ENFP','INFP','ENFJ','INFJ'].map(v=>({v,cls:'t-nf'})), 'mbti', true)
@@ -1009,6 +1049,7 @@ function buildFilters(){
     {v:'金', icon:'✦', cls:'el-metal'},
     {v:'水', icon:'💧', cls:'el-water'}
   ], 'wx', true)
+  bc('f-yinyang', [{v:'yang',label:'阳干',cls:'yy-yang'},{v:'yin',label:'阴干',cls:'yy-yin'}], 'yinyang', false)
   // 星座 grouped by element (火/土/风/水) with zodiac glyphs
   bc('f-star-fire',  [{v:'白羊',icon:'♈',cls:'el-fire'}, {v:'狮子',icon:'♌',cls:'el-fire'}, {v:'射手',icon:'♐',cls:'el-fire'}], 'star', true)
   bc('f-star-earth', [{v:'金牛',icon:'♉',cls:'el-earth'},{v:'处女',icon:'♍',cls:'el-earth'},{v:'摩羯',icon:'♑',cls:'el-earth'}], 'star', true)
@@ -1051,6 +1092,7 @@ function bc(containerId, vals, key, multi){
 
 function clearFilters(){
   Object.keys(filt).forEach(k=>{ Array.isArray(filt[k]) ? filt[k]=[] : filt[k]=null })
+  document.querySelectorAll('#f-yinyang .chip').forEach(c=>c.classList.remove('on'))
   document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'))
   document.getElementById('search').value=''
   render()
