@@ -893,15 +893,13 @@ function render(){
   })
 
   // inline edit — save on blur with 600ms debounce
-  tbody.querySelectorAll('td[contenteditable]').forEach(td=>{
+  if(!SHARE_MODE) tbody.querySelectorAll('td[contenteditable]').forEach(td=>{
     td.addEventListener('blur', ()=>{
       const id  = +td.dataset.id
       const col = td.dataset.col
       const val = td.textContent.trim()
-      // update local cache
       const rec = allData.find(r=>r.id===id)
       if(rec) rec[col] = val
-      // debounce save
       clearTimeout(saveTimer[id+col])
       saveTimer[id+col] = setTimeout(()=>saveCell(id,col,val,td), 600)
     })
@@ -939,14 +937,16 @@ function render(){
     }
     setTimeout(()=>document.addEventListener('mousedown', outside), 50)
   }
-  tbody.querySelectorAll('.td-mbti').forEach(td=>{
-    td.style.cursor='pointer'
-    td.onclick = ()=>makeSelect(td, MBTI_LIST, 'mbti')
-  })
-  tbody.querySelectorAll('.td-identity').forEach(td=>{
-    td.style.cursor='pointer'
-    td.onclick = ()=>makeSelect(td, ID_LIST, 'identity')
-  })
+  if(!SHARE_MODE){
+    tbody.querySelectorAll('.td-mbti').forEach(td=>{
+      td.style.cursor='pointer'
+      td.onclick = ()=>makeSelect(td, MBTI_LIST, 'mbti')
+    })
+    tbody.querySelectorAll('.td-identity').forEach(td=>{
+      td.style.cursor='pointer'
+      td.onclick = ()=>makeSelect(td, ID_LIST, 'identity')
+    })
+  }
 
   const byId = {}
   allData.forEach(r=>{ byId[r.identity]=(byId[r.identity]||0)+1 })
