@@ -4,188 +4,676 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>判型数据库</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a1a1a'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-size='36' font-family='PingFang SC,sans-serif' fill='white'%3E型%3C/text%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%231a1a1a'/%3E%3Ctext x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-size='36' font-family='PingFang SC,sans-serif' fill='white'%3E型%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%238b3a1f'/%3E%3Ctext x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' font-size='38' font-family='Songti SC,serif' font-weight='600' fill='%23faf6ef'%3E型%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%238b3a1f'/%3E%3Ctext x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' font-size='38' font-family='Songti SC,serif' font-weight='600' fill='%23faf6ef'%3E型%3C/text%3E%3C/svg%3E">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-/* ===== 填入你的配置 ===== */
-/* 在下方 JS 里修改 SUPABASE_URL 和 SUPABASE_KEY */
-
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #ffffff;
-  --bg2: #f7f7f5;
-  --bg3: #f0efea;
-  --border: rgba(0,0,0,0.1);
-  --border2: rgba(0,0,0,0.18);
-  --text: #1a1a1a;
-  --text2: #666;
-  --text3: #999;
-  --radius: 8px;
-  --radius-lg: 12px;
-  --info-bg: #e6f1fb;
-  --info-text: #0c447c;
+  /* warm scholar palette */
+  --bg:       #faf6ef;   /* paper */
+  --surface:  #ffffff;
+  --surface2: #f4efe5;
+  --surface3: #ece5d6;
+  --ink:      #1c1916;
+  --ink2:     #57534b;
+  --ink3:     #8a857a;
+  --ink4:     #b8b1a3;
+  --rule:     rgba(28,25,22,0.08);
+  --rule2:    rgba(28,25,22,0.16);
+  --accent:   #8b3a1f;    /* 朱砂 */
+  --accent2:  #b85a3a;
+  --accent-bg:#f3e4dc;
+  --indigo:   #2e3a6b;
+  --indigo-bg:#e5e7f0;
+  --green:    #2f6048;
+  --green-bg: #dde9df;
+  --amber-bg: #f3e6cc;
+  --amber-fg: #6b4a14;
+  --rose-bg:  #f1dadf;
+  --rose-fg:  #6e2638;
+  --plum-bg:  #e6dfee;
+  --plum-fg:  #3d2f5e;
+  --radius:   6px;
+  --radius-lg:10px;
+  --serif:    'Noto Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+  --sans:     -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Inter', sans-serif;
+  --mono:     'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #1a1a1a; --bg2: #222; --bg3: #2a2a2a;
-    --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
-    --text: #f0f0f0; --text2: #aaa; --text3: #666;
-    --info-bg: #0c2a42; --info-text: #7bbcf5;
+    --bg: #15130f; --surface: #1c1a16; --surface2: #25221c; --surface3: #2f2b23;
+    --ink: #f0ebdf; --ink2: #b8b1a3; --ink3: #857f72; --ink4: #5a554b;
+    --rule: rgba(255,251,238,0.08); --rule2: rgba(255,251,238,0.16);
+    --accent: #d68563; --accent2: #e6a486; --accent-bg: #3a241a;
+    --indigo: #a9b3da; --indigo-bg: #25283d;
+    --green: #97c1a8; --green-bg: #1f3329;
+    --amber-bg: #3a2e16; --amber-fg: #e2c285;
+    --rose-bg: #3a1f25; --rose-fg: #e5b4be;
+    --plum-bg: #2a233a; --plum-fg: #c9bce0;
   }
 }
-body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
-#app { max-width: 1400px; margin: 0 auto; padding: 1.5rem 1rem; }
-h1 { font-size: 18px; font-weight: 500; margin-bottom: 1.2rem; display: flex; align-items: center; gap: 10px; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; display: inline-block; }
-.dot.offline { background: #ef4444; }
-.dot.loading { background: #f59e0b; animation: pulse 1s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+html { background: var(--bg); }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "kern", "liga";
+}
+/* subtle paper grain */
+body::before {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(ellipse at top left, rgba(139,58,31,0.04), transparent 60%),
+    radial-gradient(ellipse at bottom right, rgba(46,58,107,0.035), transparent 65%);
+}
+#app { max-width: 1440px; margin: 0 auto; padding: 2.4rem 1.6rem 4rem; position: relative; z-index: 1; }
 
-/* toolbar */
-.toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
-.toolbar input[type=text] { flex: 1; min-width: 180px; padding: 7px 12px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 13px; outline: none; }
-.toolbar input:focus { border-color: var(--info-text); box-shadow: 0 0 0 2px var(--info-bg); }
-button { padding: 7px 14px; font-size: 13px; border-radius: var(--radius); cursor: pointer; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text); transition: all .15s; }
-button:hover { background: var(--bg2); }
-.btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
-.btn-primary:hover { opacity: .8; }
-.btn-danger { color: #ef4444; border-color: #ef4444; }
-.btn-danger:hover { background: #fef2f2; }
+/* ── masthead ── */
+.masthead {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 1rem; padding-bottom: 1.2rem; margin-bottom: 1.4rem;
+  border-bottom: 1px solid var(--rule2);
+  position: relative;
+}
+.masthead::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -4px;
+  height: 1px; background: var(--rule);
+}
+.title-block { display: flex; flex-direction: column; gap: 4px; }
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink3);
+}
+h1 {
+  font-family: var(--serif);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  display: flex; align-items: baseline; gap: 14px;
+  line-height: 1;
+}
+h1 .ja { font-size: 12px; font-family: var(--mono); color: var(--ink3); font-weight: 400; letter-spacing: 0.18em; white-space: nowrap; }
 
-/* filters */
-.filters { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 12px 14px; margin-bottom: 10px; }
-.filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 5px 0; }
-.filter-row:not(:last-child) { border-bottom: 0.5px solid var(--border); padding-bottom: 8px; margin-bottom: 3px; }
-.filter-label { font-size: 11px; color: var(--text3); min-width: 52px; flex-shrink: 0; }
-.chip { font-size: 11px; padding: 3px 9px; border-radius: 10px; cursor: pointer; border: 0.5px solid var(--border2); background: var(--bg); color: var(--text2); white-space: nowrap; transition: all .1s; user-select: none; }
-.chip:hover { background: var(--bg2); }
-.chip.on { background: var(--text); color: var(--bg); border-color: var(--text); }
-.chip.on.multi { background: #eeedfe; color: #3c3489; border-color: #afa9ec; }
+.conn {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--ink2);
+  padding: 6px 10px;
+  border: 1px solid var(--rule2);
+  border-radius: 999px;
+  background: var(--surface);
+}
+.dot { width: 6px; height: 6px; border-radius: 50%; background: #2f8a55; display: inline-block; box-shadow: 0 0 0 3px rgba(47,138,85,0.15); }
+.dot.offline { background: #c03e2e; box-shadow: 0 0 0 3px rgba(192,62,46,0.18); }
+.dot.loading { background: #c98b1c; box-shadow: 0 0 0 3px rgba(201,139,28,0.18); animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+/* ── toolbar ── */
+.toolbar {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  margin-bottom: 14px;
+}
+.search-wrap { position: relative; flex: 1; min-width: 220px; }
+.search-wrap::before {
+  content: "⌕"; position: absolute; left: 12px; top: 50%;
+  transform: translateY(-50%); color: var(--ink3); font-size: 14px;
+  pointer-events: none;
+}
+.toolbar input[type=text] {
+  width: 100%;
+  padding: 9px 14px 9px 32px;
+  border: 1px solid var(--rule2);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  font-size: 13px;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.toolbar input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+button {
+  padding: 8px 14px;
+  font-size: 12px;
+  font-family: var(--sans);
+  letter-spacing: 0.02em;
+  border-radius: var(--radius);
+  cursor: pointer;
+  border: 1px solid var(--rule2);
+  background: var(--surface);
+  color: var(--ink);
+  transition: all .15s ease;
+}
+button:hover { background: var(--surface2); border-color: var(--ink4); }
+.btn-primary {
+  background: var(--ink); color: var(--bg); border-color: var(--ink);
+  font-weight: 500;
+}
+.btn-primary:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* ── filters ── */
+.filters {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-lg);
+  padding: 4px 18px;
+  margin-bottom: 14px;
+  box-shadow: 0 1px 0 rgba(28,25,22,0.02);
+}
+.filter-row {
+  display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  padding: 10px 0;
+}
+.filter-row:not(:last-child) { border-bottom: 1px dashed var(--rule); }
+.filter-label {
+  font-family: var(--serif);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ink);
+  min-width: 64px;
+  letter-spacing: 0.08em;
+  flex-shrink: 0;
+  position: relative;
+  padding-right: 12px;
+}
+.filter-label::after {
+  content: ""; position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  width: 1px; height: 10px; background: var(--rule2);
+}
+.subgroup {
+  display: inline-flex; flex-wrap: wrap; gap: 4px; align-items: center;
+  padding: 2px 8px 2px 0;
+}
+.subgroup-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: var(--ink3);
+  padding: 0 6px 0 4px;
+}
+.chip {
+  font-size: 11px;
+  font-family: var(--mono);
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border-radius: 999px;
+  cursor: pointer;
+  border: 1px solid var(--rule2);
+  background: transparent;
+  color: var(--ink2);
+  white-space: nowrap;
+  transition: all .12s ease;
+  user-select: none;
+}
+.chip:hover { background: var(--surface2); color: var(--ink); border-color: var(--ink4); }
+.chip.on {
+  background: var(--ink); color: var(--bg);
+  border-color: var(--ink);
+  box-shadow: 0 1px 2px rgba(28,25,22,0.12);
+}
+.chip.on.multi {
+  background: var(--accent-bg);
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* ── elemental chip colors (五行 / 星座) ── */
+.chip-icon {
+  display: inline-block;
+  margin-right: 4px;
+  transform-origin: center;
+  font-size: 11px;
+  line-height: 1;
+}
+.chip.el-wood  { color: #2f6048; border-color: rgba(47,96,72,0.30); background: #eaf3df; }
+.chip.el-fire  { color: #a83a1e; border-color: rgba(168,58,30,0.30); background: #f7dccf; }
+.chip.el-earth { color: #7c5910; border-color: rgba(124,89,16,0.30); background: #f3e7c8; }
+.chip.el-metal { color: #5b5862; border-color: rgba(91,88,98,0.30); background: #e8e7ed; }
+.chip.el-water { color: #2e4a78; border-color: rgba(46,74,120,0.30); background: #dce6f0; }
+.chip.el-air   { color: #6b5a8a; border-color: rgba(107,90,138,0.30); background: #ebe4f3; }
+.chip.el-wood:hover  { background: #ddecca; border-color: #2f6048; }
+.chip.el-fire:hover  { background: #f3cab9; border-color: #a83a1e; }
+.chip.el-earth:hover { background: #ecdaa8; border-color: #7c5910; }
+.chip.el-metal:hover { background: #d9d8dd; border-color: #5b5862; }
+.chip.el-water:hover { background: #c7d6e6; border-color: #2e4a78; }
+.chip.el-air:hover   { background: #ddd1ec; border-color: #6b5a8a; }
+.chip.el-wood.on, .chip.el-wood.on.multi   { background: #2f6048; color: #f5f9ee; border-color: #2f6048; box-shadow: inset 0 0 0 1px #2f6048; }
+.chip.el-fire.on, .chip.el-fire.on.multi   { background: #a83a1e; color: #fdf1eb; border-color: #a83a1e; box-shadow: inset 0 0 0 1px #a83a1e; }
+.chip.el-earth.on, .chip.el-earth.on.multi { background: #7c5910; color: #fbf3dd; border-color: #7c5910; box-shadow: inset 0 0 0 1px #7c5910; }
+.chip.el-metal.on, .chip.el-metal.on.multi { background: #5b5862; color: #f1f0f3; border-color: #5b5862; box-shadow: inset 0 0 0 1px #5b5862; }
+.chip.el-water.on, .chip.el-water.on.multi { background: #2e4a78; color: #e8eef7; border-color: #2e4a78; box-shadow: inset 0 0 0 1px #2e4a78; }
+.chip.el-air.on, .chip.el-air.on.multi     { background: #6b5a8a; color: #f0eaf7; border-color: #6b5a8a; box-shadow: inset 0 0 0 1px #6b5a8a; }
+
+/* icon animations — gentle ambient, accelerates on hover/active */
+.chip.el-wood  .chip-icon { animation: sway 3.2s ease-in-out infinite; }
+.chip.el-fire  .chip-icon { animation: flicker 1.4s ease-in-out infinite; }
+.chip.el-earth .chip-icon { animation: tremor 2.4s ease-in-out infinite; }
+.chip.el-metal .chip-icon { animation: glint 2.8s ease-in-out infinite; }
+.chip.el-water .chip-icon { animation: drip 2.0s ease-in-out infinite; }
+.chip.el-air   .chip-icon { animation: drift 3.6s ease-in-out infinite; }
+.chip.el-wood:hover .chip-icon, .chip.el-wood.on .chip-icon   { animation-duration: 1.2s; }
+.chip.el-fire:hover .chip-icon, .chip.el-fire.on .chip-icon   { animation-duration: 0.6s; }
+.chip.el-earth:hover .chip-icon, .chip.el-earth.on .chip-icon { animation-duration: 0.9s; }
+.chip.el-metal:hover .chip-icon, .chip.el-metal.on .chip-icon { animation-duration: 1.2s; }
+.chip.el-water:hover .chip-icon, .chip.el-water.on .chip-icon { animation-duration: 0.9s; }
+.chip.el-air:hover .chip-icon, .chip.el-air.on .chip-icon     { animation-duration: 1.6s; }
+
+@keyframes sway    { 0%,100%{transform:rotate(-8deg)} 50%{transform:rotate(8deg)} }
+@keyframes flicker { 0%,100%{transform:scale(1) translateY(0); filter:brightness(1)} 35%{transform:scale(1.12) translateY(-1px); filter:brightness(1.18)} 65%{transform:scale(0.95) translateY(0); filter:brightness(0.95)} }
+@keyframes tremor  { 0%,100%{transform:translate(0,0)} 25%{transform:translate(-0.5px,0.5px)} 75%{transform:translate(0.5px,-0.5px)} }
+@keyframes glint   { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.55) drop-shadow(0 0 2px rgba(255,255,200,0.6))} }
+@keyframes drip    { 0%,100%{transform:translateY(0) scaleY(1)} 50%{transform:translateY(1.5px) scaleY(0.88)} }
+@keyframes drift   { 0%,100%{transform:translateX(-1.5px)} 50%{transform:translateX(1.5px)} }
+
+/* ── MBTI temperament chip colors (matches table badges mb-y/g/p/b) ── */
+.chip.t-sp { background: var(--amber-bg); color: var(--amber-fg); border-color: rgba(107,74,20,0.30); }
+.chip.t-nf { background: var(--green-bg); color: var(--green);    border-color: rgba(47,96,72,0.30); }
+.chip.t-nt { background: var(--plum-bg);  color: var(--plum-fg);  border-color: rgba(61,47,94,0.30); }
+.chip.t-sj { background: var(--indigo-bg);color: var(--indigo);   border-color: rgba(46,58,107,0.30); }
+.chip.t-sp:hover { background: #ecd9af; border-color: var(--amber-fg); }
+.chip.t-nf:hover { background: #cee0d2; border-color: var(--green); }
+.chip.t-nt:hover { background: #d8cee6; border-color: var(--plum-fg); }
+.chip.t-sj:hover { background: #d2d6e6; border-color: var(--indigo); }
+.chip.t-sp.on, .chip.t-sp.on.multi { background: var(--amber-fg); color: #fbf3dd; border-color: var(--amber-fg); box-shadow: inset 0 0 0 1px var(--amber-fg); }
+.chip.t-nf.on, .chip.t-nf.on.multi { background: var(--green);    color: #eff6ef; border-color: var(--green);    box-shadow: inset 0 0 0 1px var(--green); }
+.chip.t-nt.on, .chip.t-nt.on.multi { background: var(--plum-fg);  color: #f0eaf7; border-color: var(--plum-fg);  box-shadow: inset 0 0 0 1px var(--plum-fg); }
+.chip.t-sj.on, .chip.t-sj.on.multi { background: var(--indigo);   color: #e8eef7; border-color: var(--indigo);   box-shadow: inset 0 0 0 1px var(--indigo); }
+
+/* ── Enneagram type colors (e-1 … e-9) ── */
+.chip.e-1 { background: #e8e8eb; color: #4a4a52; border-color: rgba(74,74,82,0.30); }
+.chip.e-2 { background: #f1d6e4; color: #823667; border-color: rgba(130,54,103,0.30); }
+.chip.e-3 { background: #f6dec0; color: #7e5212; border-color: rgba(126,82,18,0.30); }
+.chip.e-4 { background: #e0d2ee; color: #5d3d8a; border-color: rgba(93,61,138,0.30); }
+.chip.e-5 { background: #d4dcee; color: #36436e; border-color: rgba(54,67,110,0.30); }
+.chip.e-6 { background: #ede7a8; color: #6b5610; border-color: rgba(107,86,16,0.30); }
+.chip.e-7 { background: #c3e2e2; color: #1c5757; border-color: rgba(28,87,87,0.30); }
+.chip.e-8 { background: #efc6cf; color: #7c2435; border-color: rgba(124,36,53,0.30); }
+.chip.e-9 { background: #d9e6bd; color: #4a611a; border-color: rgba(74,97,26,0.30); }
+.chip.e-1:hover { background: #d6d6da; border-color: #4a4a52; }
+.chip.e-2:hover { background: #e9c2d6; border-color: #823667; }
+.chip.e-3:hover { background: #efcea0; border-color: #7e5212; }
+.chip.e-4:hover { background: #cebde2; border-color: #5d3d8a; }
+.chip.e-5:hover { background: #becae3; border-color: #36436e; }
+.chip.e-6:hover { background: #e2d97c; border-color: #6b5610; }
+.chip.e-7:hover { background: #a4d4d4; border-color: #1c5757; }
+.chip.e-8:hover { background: #e6abb8; border-color: #7c2435; }
+.chip.e-9:hover { background: #c4d69d; border-color: #4a611a; }
+.chip.e-1.on, .chip.e-1.on.multi { background: #4a4a52; color: #efefef; border-color: #4a4a52; box-shadow: inset 0 0 0 1px #4a4a52; }
+.chip.e-2.on, .chip.e-2.on.multi { background: #823667; color: #fbe6f0; border-color: #823667; box-shadow: inset 0 0 0 1px #823667; }
+.chip.e-3.on, .chip.e-3.on.multi { background: #7e5212; color: #faecd0; border-color: #7e5212; box-shadow: inset 0 0 0 1px #7e5212; }
+.chip.e-4.on, .chip.e-4.on.multi { background: #5d3d8a; color: #efe5f9; border-color: #5d3d8a; box-shadow: inset 0 0 0 1px #5d3d8a; }
+.chip.e-5.on, .chip.e-5.on.multi { background: #36436e; color: #e7ecf7; border-color: #36436e; box-shadow: inset 0 0 0 1px #36436e; }
+.chip.e-6.on, .chip.e-6.on.multi { background: #6b5610; color: #faf2c2; border-color: #6b5610; box-shadow: inset 0 0 0 1px #6b5610; }
+.chip.e-7.on, .chip.e-7.on.multi { background: #1c5757; color: #d8efef; border-color: #1c5757; box-shadow: inset 0 0 0 1px #1c5757; }
+.chip.e-8.on, .chip.e-8.on.multi { background: #7c2435; color: #f7d8df; border-color: #7c2435; box-shadow: inset 0 0 0 1px #7c2435; }
+.chip.e-9.on, .chip.e-9.on.multi { background: #4a611a; color: #ebf3d6; border-color: #4a611a; box-shadow: inset 0 0 0 1px #4a611a; }
 .filter-actions { margin-left: auto; }
+.filter-actions button { font-size: 11px; padding: 4px 12px; color: var(--ink3); }
 
-/* stats */
-.stats { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
-.stat { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 6px 14px; font-size: 12px; color: var(--text2); }
-.stat strong { font-size: 16px; font-weight: 500; color: var(--text); display: block; }
+/* ── stats ── */
+.stats { display: flex; gap: 0; flex-wrap: wrap; margin-bottom: 14px; border: 1px solid var(--rule); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
+.stat {
+  flex: 1; min-width: 100px;
+  padding: 12px 18px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  border-right: 1px solid var(--rule);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.stat:last-child { border-right: none; }
+.stat strong {
+  font-family: var(--serif);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
 
-/* status bar */
-.statusbar { font-size: 12px; color: var(--text3); margin-bottom: 6px; min-height: 18px; }
+/* status */
+.statusbar {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink3);
+  margin-bottom: 8px;
+  min-height: 18px;
+  display: flex; align-items: center; gap: 8px;
+}
+.statusbar::before { content: "›"; color: var(--accent); }
 
-/* table */
-.tbl-wrap { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); overflow-x: auto; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
-th { background: var(--bg2); padding: 8px 10px; text-align: left; font-weight: 500; border-bottom: 0.5px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; position: sticky; top: 0; z-index: 2; font-size: 12px; color: var(--text2); }
-th:hover { background: var(--bg3); }
-.sort-arrow { font-size: 10px; margin-left: 2px; color: var(--text3); }
-td { padding: 6px 10px; border-bottom: 0.5px solid var(--border); color: var(--text); vertical-align: middle; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-tr:last-child td { border-bottom: none; }
-tr:hover td { background: var(--bg2); }
-td[contenteditable=true] { cursor: text; }
-td[contenteditable=true]:focus { outline: 2px solid var(--info-text); outline-offset: -2px; background: var(--info-bg); white-space: normal; overflow: visible; max-width: none; }
-td.saving { opacity: .6; }
+/* ── table ── */
+.tbl-wrap {
+  background: var(--surface);
+  border: 1px solid var(--rule2);
+  border-radius: var(--radius-lg);
+  overflow-x: auto;
+  box-shadow: 0 1px 0 rgba(28,25,22,0.02), 0 8px 24px -16px rgba(28,25,22,0.12);
+}
+table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; min-width: 1000px; }
+thead th {
+  background: var(--surface2);
+  padding: 11px 12px;
+  text-align: left;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  border-bottom: 1px solid var(--rule2);
+  border-right: 1px solid var(--rule);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  position: sticky; top: 0; z-index: 2;
+  color: var(--ink2);
+  transition: background .12s;
+}
+thead th:last-child { border-right: none; }
+thead th:hover { background: var(--surface3); color: var(--ink); }
+.sort-arrow { font-size: 10px; margin-left: 3px; color: var(--accent); font-family: var(--mono); }
+tbody td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink);
+  vertical-align: middle;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  transition: background .1s;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface2); }
+tbody td[contenteditable=true] { cursor: text; }
+tbody td[contenteditable=true]:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  background: var(--accent-bg);
+  white-space: normal; overflow: visible; max-width: none;
+}
+tbody td.saving { opacity: .55; }
 
-/* badges */
-.badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 500; }
-.b-star  { background: #eeedfe; color: #3c3489; }
-.b-pub   { background: #e1f5ee; color: #085041; }
-.b-net   { background: #faeeda; color: #633806; }
-.b-role  { background: #faece7; color: #712b13; }
-.b-wri   { background: #fbeaf0; color: #72243e; }
-.b-other { background: var(--bg2); color: var(--text2); }
-.mb { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 11px; font-weight: 500; }
-.mb-y { background: #faeeda; color: #633806; }
-.mb-g { background: #eaf3de; color: #27500a; }
-.mb-p { background: #eeedfe; color: #3c3489; }
-.mb-b { background: #e6f1fb; color: #0c447c; }
-.del-btn { background: none; border: none; color: var(--text3); cursor: pointer; padding: 2px 6px; font-size: 15px; border-radius: 4px; }
-.del-btn:hover { color: #ef4444; background: #fef2f2; }
+/* monospace numeric/code columns */
+tbody td[data-col=soc],
+tbody td[data-col=e9],
+tbody td[data-col=instinct],
+tbody td[data-col=attitude] {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+}
+tbody td[data-col=name] {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 13px;
+  color: var(--ink);
+}
 
-/* modal */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; }
-.modal-overlay.open { display: flex; align-items: center; justify-content: center; }
-.modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); padding: 1.5rem; width: 560px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
-.modal h2 { font-size: 15px; font-weight: 500; margin-bottom: 1rem; }
-.form-row { margin-bottom: 10px; }
-.form-row label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 4px; }
-.form-row input, .form-row select { width: 100%; padding: 7px 10px; border: 0.5px solid var(--border2); border-radius: var(--radius); background: var(--bg); color: var(--text); font-size: 13px; outline: none; }
-.form-row input:focus { border-color: var(--info-text); box-shadow: 0 0 0 2px var(--info-bg); }
-.form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1rem; }
+/* ── badges ── */
+.badge, .mb {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-family: var(--mono);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  border: 1px solid transparent;
+}
+.b-star  { background: var(--plum-bg);   color: var(--plum-fg);   border-color: rgba(61,47,94,0.18); }
+.b-pub   { background: var(--green-bg);  color: var(--green);     border-color: rgba(47,96,72,0.22); }
+.b-net   { background: var(--amber-bg);  color: var(--amber-fg);  border-color: rgba(107,74,20,0.22); }
+.b-role  { background: var(--accent-bg); color: var(--accent);    border-color: rgba(139,58,31,0.22); }
+.b-wri   { background: var(--rose-bg);   color: var(--rose-fg);   border-color: rgba(110,38,56,0.22); }
+.b-other { background: var(--surface2);  color: var(--ink3);      border-color: var(--rule); }
 
-/* import banner */
-.import-banner { background: var(--info-bg); border: 0.5px solid var(--info-text); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 10px; font-size: 13px; color: var(--info-text); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.mb-y { background: var(--amber-bg); color: var(--amber-fg); }
+.mb-g { background: var(--green-bg); color: var(--green); }
+.mb-p { background: var(--plum-bg);  color: var(--plum-fg); }
+.mb-b { background: var(--indigo-bg);color: var(--indigo); }
+
+.del-btn {
+  background: none; border: none; color: var(--ink4);
+  cursor: pointer; padding: 2px 6px; font-size: 16px;
+  border-radius: 4px; line-height: 1; transition: all .12s;
+}
+.del-btn:hover { color: var(--accent); background: var(--accent-bg); }
+
+/* ── modal ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(28,25,22,.5); backdrop-filter: blur(3px);
+  z-index: 200;
+}
+.modal-overlay.open { display: flex; align-items: center; justify-content: center; animation: fadein .2s; }
+@keyframes fadein { from{opacity:0} to{opacity:1} }
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--rule2);
+  padding: 1.8rem;
+  width: 580px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 24px 60px -20px rgba(28,25,22,0.4);
+}
+.modal h2 {
+  font-family: var(--serif);
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 1.2rem;
+  letter-spacing: 0.04em;
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--rule);
+}
+.form-row { margin-bottom: 12px; }
+.form-row label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  display: block;
+  margin-bottom: 5px;
+}
+.form-row input, .form-row select {
+  width: 100%;
+  padding: 8px 11px;
+  border: 1px solid var(--rule2);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 13px;
+  font-family: var(--sans);
+  outline: none;
+  transition: all .15s;
+}
+.form-row input:focus, .form-row select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-bg);
+}
+.form-actions {
+  display: flex; gap: 8px; justify-content: flex-end;
+  margin-top: 1.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+}
+
+/* ── import banner ── */
+.import-banner {
+  background: var(--accent-bg);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  font-size: 13px;
+  color: var(--accent);
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  font-family: var(--serif);
+}
+.import-banner button {
+  background: var(--accent); color: #fff;
+  border-color: var(--accent);
+  font-family: var(--sans);
+}
+.import-banner button:hover { background: var(--ink); border-color: var(--ink); }
+
+/* ── colophon (footer) ── */
+.colophon {
+  margin-top: 3rem;
+  padding-top: 1.4rem;
+  position: relative;
+}
+.colophon-rule {
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--rule2) 20%, var(--rule2) 80%, transparent);
+  margin-bottom: 1.2rem;
+}
+.colophon-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 10px 16px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--ink3);
+  letter-spacing: 0.04em;
+}
+.colophon-mark {
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--accent);
+  line-height: 1;
+  transform: translateY(2px);
+}
+.colophon-text { color: var(--ink2); }
+.colophon-text strong {
+  font-family: var(--serif);
+  font-weight: 600;
+  color: var(--ink);
+  letter-spacing: 0.02em;
+  padding: 0 2px;
+}
+.colophon-year {
+  color: var(--ink3);
+  letter-spacing: 0.06em;
+}
+.colophon-meta {
+  margin-left: auto;
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--ink3);
+  font-feature-settings: "kern";
+}
+@media (max-width: 720px) {
+  .colophon-meta { margin-left: 0; }
+}
+
+/* responsive */
+@media (max-width: 720px) {
+  #app { padding: 1.4rem 1rem 2rem; }
+  h1 { font-size: 24px; }
+  .masthead { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .stat { padding: 10px 14px; }
+  .stat strong { font-size: 20px; }
+}
 </style>
 </head>
 <body>
 <div id="app">
-  <h1>
-    <span class="dot loading" id="conn-dot"></span>
-    判型数据库
-    <span id="conn-label" style="font-size:12px;color:var(--text3);font-weight:400">连接中...</span>
-  </h1>
+  <header class="masthead">
+    <div class="title-block">
+      <span class="eyebrow">Typology · 人格类型学</span>
+      <h1>判型数据库 <span class="ja">薯&amp;粥&rsquo;s PDB</span></h1>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="conn">
+        <span class="dot loading" id="conn-dot"></span>
+        <span id="conn-label">连接中</span>
+      </div>
+      <button id="lock-btn" onclick="showAdminLogin()" title="管理员登录" style="background:none;border:none;font-size:16px;cursor:pointer;padding:4px;color:var(--ink3);line-height:1">🔒</button>
+    </div>
+  </header>
 
   <div id="import-banner" class="import-banner" style="display:none">
-    数据库为空，是否导入初始数据（121条）？
-    <button class="btn-primary" onclick="importInitial()" style="white-space:nowrap">一键导入</button>
+    <span>数据库为空 — 是否导入初始数据(121 条)？</span>
+    <button onclick="importInitial()" style="white-space:nowrap">一键导入</button>
   </div>
 
   <div class="toolbar">
-    <input type="text" id="search" placeholder="搜索姓名、Tritype、来自...">
-    <button class="btn-primary" onclick="openAdd()">+ 添加</button>
-    <button onclick="loadData()">刷新</button>
+    <div class="search-wrap"><input type="text" id="search" placeholder="搜索姓名 / Tritype / 来自..."></div>
+    <button id="share-btn" onclick="copyShareLink()" style="display:none">🔗 复制分享链接</button>
+    <button class="btn-primary" id="btn-add" onclick="openAdd()">＋ 添加条目</button>
+    <button id="btn-refresh" onclick="loadData()">↻ 刷新</button>
   </div>
 
   <div class="filters" id="filters">
     <div class="filter-row">
       <span class="filter-label">身份</span>
-      <div id="f-shenfen"></div>
+      <div id="f-shenfen" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
     <div class="filter-row">
       <span class="filter-label">MBTI</span>
-      <div id="f-mbti"></div>
+      <div class="subgroup"><span class="subgroup-label">SP</span><div id="f-mbti-sp" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">NF</span><div id="f-mbti-nf" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">NT</span><div id="f-mbti-nt" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">SJ</span><div id="f-mbti-sj" style="display:contents"></div></div>
     </div>
     <div class="filter-row">
-      <span class="filter-label">SOC型</span>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
-        <span style="font-size:10px;color:var(--text3);padding:2px 4px">α</span>
-        <div id="f-soc-a" style="display:contents"></div>
-        <span style="font-size:10px;color:var(--text3);padding:2px 6px 2px 10px">β</span>
-        <div id="f-soc-b" style="display:contents"></div>
-        <span style="font-size:10px;color:var(--text3);padding:2px 6px 2px 10px">γ</span>
-        <div id="f-soc-g" style="display:contents"></div>
-        <span style="font-size:10px;color:var(--text3);padding:2px 6px 2px 10px">δ</span>
-        <div id="f-soc-d" style="display:contents"></div>
-      </div>
-
+      <span class="filter-label">SOC 型</span>
+      <div class="subgroup"><span class="subgroup-label">α</span><div id="f-soc-a" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">β</span><div id="f-soc-b" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">γ</span><div id="f-soc-g" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">δ</span><div id="f-soc-d" style="display:contents"></div></div>
     </div>
     <div class="filter-row">
       <span class="filter-label">九型</span>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">
-        <span style="font-size:10px;color:var(--text3);padding:2px 4px">腹区</span>
-        <div id="f-e9-gut" style="display:contents"></div>
-        <span style="font-size:10px;color:var(--text3);padding:2px 6px 2px 10px">心区</span>
-        <div id="f-e9-heart" style="display:contents"></div>
-        <span style="font-size:10px;color:var(--text3);padding:2px 6px 2px 10px">脑区</span>
-        <div id="f-e9-head" style="display:contents"></div>
-      </div>
+      <div class="subgroup"><span class="subgroup-label">腹</span><div id="f-e9-gut" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">心</span><div id="f-e9-heart" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">脑</span><div id="f-e9-head" style="display:contents"></div></div>
     </div>
     <div class="filter-row">
       <span class="filter-label">本能副型</span>
-      <div id="f-inst"></div>
-      <span class="filter-label" style="margin-left:16px">五行</span>
-      <div id="f-wx"></div>
-      <span class="filter-label" style="margin-left:16px">星座</span>
-      <div id="f-star"></div>
+      <div id="f-inst" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">五行</span>
+      <div id="f-wx" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
+    <div class="filter-row">
+      <span class="filter-label">星座</span>
+      <div class="subgroup"><span class="subgroup-label">火</span><div id="f-star-fire" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">土</span><div id="f-star-earth" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">风</span><div id="f-star-air" style="display:contents"></div></div>
+      <div class="subgroup"><span class="subgroup-label">水</span><div id="f-star-water" style="display:contents"></div></div>
     </div>
     <div class="filter-row">
       <span class="filter-label">态度类型</span>
-      <div id="f-attitude"></div>
+      <div id="f-attitude" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
     <div class="filter-row">
       <span class="filter-label">爱之心理</span>
-      <div id="f-love"></div>
+      <div id="f-love" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       <div class="filter-actions">
-        <button onclick="clearFilters()" style="font-size:11px;padding:3px 10px">清除筛选</button>
+        <button onclick="clearFilters()">清除筛选</button>
       </div>
     </div>
   </div>
@@ -213,6 +701,31 @@ td.saving { opacity: .6; }
       </thead>
       <tbody id="tbody"></tbody>
     </table>
+  </div>
+
+  <footer class="colophon">
+    <div class="colophon-rule"></div>
+    <div class="colophon-row">
+      <span class="colophon-mark">©</span>
+      <span class="colophon-text"><span class="colophon-year">2024–2026</span> <strong>Out of Character LLC</strong>. All rights reserved.</span>
+      <span class="colophon-meta">本站仅供个人研究与类型学讨论使用 · 未经授权,不得复制、转载或用于商业用途</span>
+    </div>
+  </footer>
+</div>
+
+<!-- Admin Login Modal -->
+<div class="modal-overlay" id="admin-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="width:340px">
+    <h2>管理员登录</h2>
+    <div class="form-row">
+      <label>密码</label>
+      <input id="admin-pw" type="password" placeholder="输入管理员密码" autocomplete="current-password">
+    </div>
+    <div id="admin-err" style="font-size:12px;color:var(--accent);min-height:18px;margin-top:-4px"></div>
+    <div class="form-actions">
+      <button onclick="document.getElementById('admin-modal').classList.remove('open')">取消</button>
+      <button class="btn-primary" onclick="tryLogin()">登录</button>
+    </div>
   </div>
 </div>
 
@@ -261,6 +774,24 @@ const SUPABASE_KEY = 'sb_publishable_NM2_44Uz8Txp31YNzWKMpA_cHD53YRD'
 
 const { createClient } = supabase
 const db = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+const ADMIN_HASH = '8561d5a0e1acdf82807126d8248289c5ea224fbe01b6d59f3229040193301082'
+const ADMIN_UNLOCKED = sessionStorage.getItem('pdb_admin') === '1'
+const SHARE_MODE = !ADMIN_UNLOCKED
+
+async function _h(s){ const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)); return Array.from(new Uint8Array(b)).map(x=>x.toString(16).padStart(2,'0')).join('') }
+
+function showAdminLogin(){
+  document.getElementById('admin-modal').classList.add('open')
+  setTimeout(()=>document.getElementById('admin-pw').focus(), 50)
+}
+async function tryLogin(){
+  const pw = document.getElementById('admin-pw').value
+  const h = await _h(pw)
+  if(h === ADMIN_HASH){ sessionStorage.setItem('pdb_admin','1'); location.reload() }
+  else { document.getElementById('admin-err').textContent='密码错误'; document.getElementById('admin-pw').select() }
+}
+function adminLogout(){ sessionStorage.removeItem('pdb_admin'); location.reload() }
 
 const MBTI_Y = new Set(['ESFP','ISFP','ISTP','ESTP'])
 const MBTI_G = new Set(['ENFP','INFP','INFJ','ENFJ'])
@@ -312,6 +843,7 @@ async function loadData(){
 function getFiltered(){
   const q = document.getElementById('search').value.toLowerCase()
   return allData.filter(r=>{
+    if(SHARE_MODE && r.identity === '素人') return false
     if(filt.shenfen && r.identity !== filt.shenfen) return false
     if(filt.mbti.length && !filt.mbti.includes(r.mbti)) return false
     if(filt.soctype.length && !filt.soctype.some(s=>(r.soc||'').includes(s))) return false
@@ -342,19 +874,20 @@ function render(){
   rows.forEach(r=>{
     const tr = document.createElement('tr')
     const mc = mbtiCls(r.mbti)
+    const ce = SHARE_MODE ? 'false' : 'true'
     tr.innerHTML = `
-      <td contenteditable="true" data-id="${r.id}" data-col="name"     title="${r.name||''}">${r.name||''}</td>
+      <td contenteditable="${ce}" data-id="${r.id}" data-col="name"     title="${r.name||''}">${r.name||''}</td>
       <td class="td-mbti" data-id="${r.id}"><span class="mb ${mc}">${r.mbti||''}</span></td>
-      <td contenteditable="true" data-id="${r.id}" data-col="soc"      title="${r.soc||''}">${r.soc||''}</td>
-      <td contenteditable="true" data-id="${r.id}" data-col="e9">${r.e9||''}</td>
-      <td contenteditable="true" data-id="${r.id}" data-col="tritype"  title="${r.tritype||''}">${r.tritype||''}</td>
-      <td contenteditable="true" data-id="${r.id}" data-col="instinct" title="${r.instinct||''}">${r.instinct||''}</td>
-      <td contenteditable="true" data-id="${r.id}" data-col="attitude">${r.attitude||''}</td>
-      <td contenteditable="true" data-id="${r.id}" data-col="love_psych" title="${r.love_psych||''}">${r.love_psych||''}</td>
-      <td contenteditable="true" data-id="${r.id}" data-col="wuxing" title="${r.wuxing||''}">${r.wuxing||''}</td>
-      <td contenteditable="true" data-id="${r.id}" data-col="xingzuo" title="${r.xingzuo||''}">${r.xingzuo||''}</td>
+      <td contenteditable="${ce}" data-id="${r.id}" data-col="soc"      title="${r.soc||''}">${r.soc||''}</td>
+      <td contenteditable="${ce}" data-id="${r.id}" data-col="e9">${r.e9||''}</td>
+      <td contenteditable="${ce}" data-id="${r.id}" data-col="tritype"  title="${r.tritype||''}">${r.tritype||''}</td>
+      <td contenteditable="${ce}" data-id="${r.id}" data-col="instinct" title="${r.instinct||''}">${r.instinct||''}</td>
+      <td contenteditable="${ce}" data-id="${r.id}" data-col="attitude">${r.attitude||''}</td>
+      <td contenteditable="${ce}" data-id="${r.id}" data-col="love_psych" title="${r.love_psych||''}">${r.love_psych||''}</td>
+      <td contenteditable="${ce}" data-id="${r.id}" data-col="wuxing" title="${r.wuxing||''}">${r.wuxing||''}</td>
+      <td contenteditable="${ce}" data-id="${r.id}" data-col="xingzuo" title="${r.xingzuo||''}">${r.xingzuo||''}</td>
       <td class="td-identity" data-id="${r.id}"><span class="badge ${idCls(r.identity)}">${r.identity||''}</span></td>
-      <td><button class="del-btn" onclick="delRow(${r.id})">×</button></td>
+      <td>${SHARE_MODE ? '' : `<button class="del-btn" onclick="delRow(${r.id})">×</button>`}</td>
     `
     tbody.appendChild(tr)
   })
@@ -443,10 +976,13 @@ async function saveCell(id, col, val, td){
 function sortBy(col){ sortCol===col ? sortDir*=-1 : (sortCol=col, sortDir=1); render() }
 
 function buildFilters(){
-  const mbtiVals = [...new Set(allData.map(r=>r.mbti).filter(Boolean))].sort()
   const e9Vals   = [...new Set(allData.map(r=>r.e9).filter(Boolean))].sort()
-  bc('f-shenfen', ['明星','素人','网红','角色','作者'], 'shenfen', false)
-  bc('f-mbti',    mbtiVals, 'mbti', true)
+  bc('f-shenfen', SHARE_MODE ? ['明星','网红','角色','作者'] : ['明星','素人','网红','角色','作者'], 'shenfen', false)
+  // MBTI grouped by temperament: SP / NF / NT / SJ (each with its color)
+  bc('f-mbti-sp', ['ESFP','ISFP','ESTP','ISTP'].map(v=>({v,cls:'t-sp'})), 'mbti', true)
+  bc('f-mbti-nf', ['ENFP','INFP','ENFJ','INFJ'].map(v=>({v,cls:'t-nf'})), 'mbti', true)
+  bc('f-mbti-nt', ['ENTP','INTP','ENTJ','INTJ'].map(v=>({v,cls:'t-nt'})), 'mbti', true)
+  bc('f-mbti-sj', ['ESFJ','ISFJ','ESTJ','ISTJ'].map(v=>({v,cls:'t-sj'})), 'mbti', true)
   const SOC_GROUPS = {
     'f-soc-a': ['ILE','SEI','ESE','LII'],
     'f-soc-b': ['SLE','IEI','EIE','LSI'],
@@ -456,15 +992,28 @@ function buildFilters(){
   Object.entries(SOC_GROUPS).forEach(([cid, vals])=>{
     bc(cid, vals, 'soctype', true)
   })
-  const E9_GUT   = ['1w2','1w9','8w7','8w9','9w1','9w8']
-  const E9_HEART = ['2w1','2w3','3w2','3w4','4w3','4w5']
-  const E9_HEAD  = ['5w4','5w6','6w5','6w7','7w6','7w8']
+  // E9 wing chips inherit the main type color (1w2 & 1w9 both blue-gray etc.)
+  const E9wrap = v => ({v, cls: 'e-' + v[0]})
+  const E9_GUT   = ['1w2','1w9','8w7','8w9','9w1','9w8'].map(E9wrap)
+  const E9_HEART = ['2w1','2w3','3w2','3w4','4w3','4w5'].map(E9wrap)
+  const E9_HEAD  = ['5w4','5w6','6w5','6w7','7w6','7w8'].map(E9wrap)
   bc('f-e9-gut',   E9_GUT,   'e9', true)
   bc('f-e9-heart', E9_HEART, 'e9', true)
   bc('f-e9-head',  E9_HEAD,  'e9', true)
   bc('f-inst',    ['so','sp','sx'], 'inst', true)
-  bc('f-wx',      ['木','火','土','金','水'], 'wx', true)
-  bc('f-star',    ['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'], 'star', true)
+  // 五行 with elemental colors + animated icons
+  bc('f-wx', [
+    {v:'木', icon:'🌿', cls:'el-wood'},
+    {v:'火', icon:'🔥', cls:'el-fire'},
+    {v:'土', icon:'⛰', cls:'el-earth'},
+    {v:'金', icon:'✦', cls:'el-metal'},
+    {v:'水', icon:'💧', cls:'el-water'}
+  ], 'wx', true)
+  // 星座 grouped by element (火/土/风/水) with zodiac glyphs
+  bc('f-star-fire',  [{v:'白羊',icon:'♈',cls:'el-fire'}, {v:'狮子',icon:'♌',cls:'el-fire'}, {v:'射手',icon:'♐',cls:'el-fire'}], 'star', true)
+  bc('f-star-earth', [{v:'金牛',icon:'♉',cls:'el-earth'},{v:'处女',icon:'♍',cls:'el-earth'},{v:'摩羯',icon:'♑',cls:'el-earth'}], 'star', true)
+  bc('f-star-air',   [{v:'双子',icon:'♊',cls:'el-air'},  {v:'天秤',icon:'♎',cls:'el-air'},  {v:'水瓶',icon:'♒',cls:'el-air'}],   'star', true)
+  bc('f-star-water', [{v:'巨蟹',icon:'♋',cls:'el-water'},{v:'天蝎',icon:'♏',cls:'el-water'},{v:'双鱼',icon:'♓',cls:'el-water'}], 'star', true)
   const attVals = [...new Set(allData.map(r=>r.attitude).filter(Boolean))].sort()
   const loveVals = [...new Set(allData.map(r=>r.love_psych).filter(Boolean))].sort()
   bc('f-attitude', attVals, 'attitude', true)
@@ -475,10 +1024,15 @@ function bc(containerId, vals, key, multi){
   const c = document.getElementById(containerId)
   if(!c) return
   c.innerHTML = ''
-  vals.forEach(v=>{
+  vals.forEach(item=>{
+    const isObj = typeof item === 'object'
+    const v = isObj ? item.v : item
+    const label = isObj ? (item.label || item.v) : item
+    const extraCls = isObj ? (item.cls || '') : ''
+    const icon = isObj ? (item.icon || '') : ''
     const d = document.createElement('span')
-    d.className = 'chip' + (multi?' multi':'')
-    d.textContent = v
+    d.className = 'chip' + (multi?' multi':'') + (extraCls ? ' '+extraCls : '')
+    d.innerHTML = (icon ? `<span class="chip-icon">${icon}</span>` : '') + label
     d.onclick = ()=>{
       if(multi){
         const arr=filt[key], idx=arr.indexOf(v)
@@ -556,6 +1110,31 @@ async function importInitial(){
 }
 
 function setStatus(msg){ document.getElementById('statusbar').textContent = msg }
+
+// ── share mode init ──
+if(SHARE_MODE){
+  document.getElementById('btn-add').style.display = 'none'
+  document.getElementById('btn-refresh').style.display = 'none'
+  document.getElementById('import-banner').style.display = 'none'
+  document.getElementById('lock-btn').title = '管理员登录'
+} else {
+  document.getElementById('share-btn').style.display = ''
+  document.getElementById('lock-btn').textContent = '🔓'
+  document.getElementById('lock-btn').title = '退出管理员'
+  document.getElementById('lock-btn').onclick = adminLogout
+}
+
+function copyShareLink(){
+  const url = location.origin + location.pathname
+  navigator.clipboard.writeText(url).then(()=>{
+    const btn = document.getElementById('share-btn')
+    const orig = btn.textContent
+    btn.textContent = '✓ 已复制'
+    setTimeout(()=>{ btn.textContent = orig }, 2000)
+  })
+}
+
+document.getElementById('admin-pw').addEventListener('keydown', e=>{ if(e.key==='Enter') tryLogin() })
 
 // ── init ──
 document.getElementById('search').addEventListener('input', render)
