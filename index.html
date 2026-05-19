@@ -338,28 +338,46 @@ button:hover { background: var(--surface2); border-color: var(--ink4); }
 .filter-actions { margin-left: auto; }
 .filter-actions button { font-size: 11px; padding: 4px 12px; color: var(--ink3); }
 
-/* ── stats ── */
-.stats { display: flex; gap: 0; flex-wrap: wrap; margin-bottom: 14px; border: 1px solid var(--rule); border-radius: var(--radius-lg); background: var(--surface); overflow: hidden; }
-.stat {
-  flex: 1; min-width: 100px;
-  padding: 12px 18px;
-  font-family: var(--mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink3);
-  border-right: 1px solid var(--rule);
-  display: flex; flex-direction: column; gap: 4px;
+/* ── masthead stats ── */
+.mhead-stats {
+  display: flex; align-items: stretch; gap: 1px;
+  background: var(--rule2);
+  border: 1px solid var(--rule2);
+  border-radius: var(--radius);
+  overflow: hidden;
+  flex-shrink: 0;
+  align-self: center;
 }
-.stat:last-child { border-right: none; }
-.stat strong {
+.mhead-stat {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 6px 13px; gap: 3px;
+  background: var(--surface);
+  min-width: 46px;
+  transition: background .12s;
+}
+.mhead-stat:hover { background: var(--surface2); }
+.mhead-stat strong {
   font-family: var(--serif);
-  font-size: 24px;
-  font-weight: 600;
-  color: var(--ink);
-  letter-spacing: -0.01em;
-  line-height: 1;
+  font-size: 19px; font-weight: 600;
+  color: var(--ink); letter-spacing: -0.01em; line-height: 1;
 }
+.mhead-stat span {
+  font-family: var(--mono); font-size: 9px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink3);
+}
+.mhead-stat.s-filter strong { color: var(--accent); }
+@media (max-width: 900px) {
+  .mhead-stats { display: none; }
+  .mhead-stats-mobile { display: flex !important; }
+}
+.mhead-stats-mobile {
+  display: none; flex-wrap: wrap; gap: 1px;
+  background: var(--rule2); border: 1px solid var(--rule2);
+  border-radius: var(--radius); overflow: hidden;
+  margin-bottom: 14px;
+}
+.mhead-stats-mobile .mhead-stat { flex: 1; min-width: 60px; }
 
 /* status */
 .statusbar {
@@ -606,8 +624,6 @@ tbody td[data-col=name] {
   #app { padding: 1.4rem 1rem 2rem; }
   h1 { font-size: 24px; }
   .masthead { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .stat { padding: 10px 14px; }
-  .stat strong { font-size: 20px; }
 }
 </style>
 </head>
@@ -618,7 +634,8 @@ tbody td[data-col=name] {
       <span class="eyebrow">Typology · 人格类型学</span>
       <h1>判型数据库 <span class="ja">薯&amp;粥&rsquo;s PDB</span></h1>
     </div>
-    <div style="display:flex;align-items:center;gap:8px">
+    <div id="stats" class="mhead-stats"></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <div class="conn">
         <span class="dot loading" id="conn-dot"></span>
         <span id="conn-label">连接中</span>
@@ -626,6 +643,7 @@ tbody td[data-col=name] {
       <button id="lock-btn" onclick="showAdminLogin()" title="管理员登录" style="background:none;border:none;font-size:16px;cursor:pointer;padding:4px;color:var(--ink3);line-height:1">🔒</button>
     </div>
   </header>
+  <div id="stats-mobile" class="mhead-stats-mobile"></div>
 
   <div id="import-banner" class="import-banner" style="display:none">
     <span>数据库为空 — 是否导入初始数据(121 条)？</span>
@@ -694,7 +712,6 @@ tbody td[data-col=name] {
     </div>
   </div>
 
-  <div class="stats" id="stats"></div>
   <div class="statusbar" id="statusbar">加载中...</div>
 
   <div class="tbl-wrap">
@@ -990,13 +1007,17 @@ function render(){
 
   const byId = {}
   allData.forEach(r=>{ byId[r.identity]=(byId[r.identity]||0)+1 })
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><strong>${allData.length}</strong>总计</div>
-    <div class="stat"><strong>${rows.length}</strong>筛选</div>
-    <div class="stat"><strong>${byId['明星']||0}</strong>明星</div>
-    ${SHARE_MODE ? '' : `<div class="stat"><strong>${byId['素人']||0}</strong>素人</div>`}
-    <div class="stat"><strong>${byId['网红']||0}</strong>网红</div>
+  const statsHTML = `
+    <div class="mhead-stat"><strong>${allData.length}</strong><span>总计</span></div>
+    <div class="mhead-stat s-filter"><strong>${rows.length}</strong><span>筛选</span></div>
+    <div class="mhead-stat"><strong>${byId['明星']||0}</strong><span>明星</span></div>
+    ${SHARE_MODE ? '' : `<div class="mhead-stat"><strong>${byId['素人']||0}</strong><span>素人</span></div>`}
+    <div class="mhead-stat"><strong>${byId['网红']||0}</strong><span>网红</span></div>
+    <div class="mhead-stat"><strong>${byId['角色']||0}</strong><span>角色</span></div>
+    <div class="mhead-stat"><strong>${byId['作者']||0}</strong><span>作者</span></div>
   `
+  document.getElementById('stats').innerHTML = statsHTML
+  document.getElementById('stats-mobile').innerHTML = statsHTML
 
   ;['name','mbti','e9','tritype','identity'].forEach(c=>{
     const el = document.getElementById('sa-'+c)
